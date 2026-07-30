@@ -494,6 +494,9 @@ function startSync() {
   
   // Poll every 2 seconds
   syncTimer = setInterval(cloudLoad, 2000);
+  
+  // Also immediately try again after 1s (in case blob was just created)
+  setTimeout(cloudLoad, 1000);
 }
 
 // Load from localStorage
@@ -756,10 +759,14 @@ function closeHistory() {
   document.getElementById('historyPage').classList.add('hidden');
 }
 
-function openShare() {
+async function openShare() {
+  // Ensure blob exists before sharing
+  if (!blobUrl) {
+    await cloudSave();
+  }
   const url = new URL(window.location.href);
   url.searchParams.set('session', sessionId);
-  // Also pass blob URL so friend can sync
+  url.hash = ''; // Clear old hash
   if (blobUrl) {
     url.searchParams.set('blob', blobUrl);
   }
