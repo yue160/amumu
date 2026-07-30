@@ -300,10 +300,6 @@ body { display:flex; }
 <div class="main">
   <div class="header">
     <div class="title" id="pageTitle">阿沐的菜单</div>
-    <div class="actions">
-      <button class="btn btn-outline btn-sm" onclick="openShare()" title="分享">🔗 分享</button>
-      <button class="btn btn-outline btn-sm" onclick="openHistory()" title="历史订单">📜 历史</button>
-    </div>
   </div>
   <div class="content" id="dishContent"></div>
 </div>
@@ -6402,7 +6398,17 @@ function renderSidebar() {
       <span class="icon">${cat.icon}</span>
       <span class="label">${cat.name}</span>
     </div>
-  `).join('');
+  `).join('') + `
+    <div style="flex:1;"></div>
+    <div class="nav-item" onclick="openShare()" style="border-top:1px solid rgba(255,255,255,.08);">
+      <span class="icon">🔗</span>
+      <span class="label">分享</span>
+    </div>
+    <div class="nav-item" onclick="openHistory()">
+      <span class="icon">📜</span>
+      <span class="label">历史</span>
+    </div>
+  `;
 }
 
 function renderContent() {
