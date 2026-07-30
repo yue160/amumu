@@ -314,11 +314,11 @@ body { display:flex; }
 
 <!-- Cart Panel -->
 <div class="cart-panel hidden" id="cartPanel">
-  <div class="cart-sheet">
+  <div class="cart-sheet" onclick="event.stopPropagation()">
     <div class="cart-header">
       <div class="modal-handle"></div>
       <h3>🛒 购物车</h3>
-      <button class="modal-close" onclick="toggleCart()">✕</button>
+      <button class="modal-close" onclick="event.stopPropagation(); toggleCart()">✕</button>
     </div>
     <div class="cart-body" id="cartBody"></div>
     <div class="cart-footer">
@@ -6241,25 +6241,25 @@ function renderContent() {
     </div>
     <div class="dish-grid">
       ${cat.dishes.map(d => `
-        <div class="dish-card ${selectedDishes[d.id] ? 'selected' : ''}" onclick="toggleDish('${d.id}','${d.name}','${cat.id}','${cat.name}')">
+        <div class="dish-card ${selectedDishes[d.id] ? 'selected' : ''}" data-dish-id="${d.id}" data-dish-name="${d.name}">
           <div class="dish-icon">🍽️</div>
           <div class="dish-info">
             <div class="dish-name">${d.name}</div>
             <div class="dish-hint">${d.ingredients.length}种食材 · ${d.steps.length}步制作</div>
           </div>
-          <div class="dish-check">✓</div>
+          <div class="dish-check" onclick="event.stopPropagation(); toggleDish('${d.id}','${d.name}','${cat.id}','${cat.name}')">✓</div>
         </div>
       `).join('')}
     </div>
   `;
   
-  // Rebind click on dish cards for detail
+  // Bind click on dish cards for detail (whole card except check area)
   content.querySelectorAll('.dish-card').forEach(card => {
     card.addEventListener('click', function(e) {
-      // Don't trigger if clicking the check area only (handled by toggleDish)
-      const dishId = this.querySelector('.dish-name').textContent;
-      // Find the dish
-      const dish = cat.dishes.find(d => d.name === dishId);
+      // Don't trigger if clicking the check area
+      if (e.target.closest('.dish-check')) return;
+      const dishId = this.dataset.dishId;
+      const dish = cat.dishes.find(d => d.id === dishId);
       if (dish) {
         openDetail(dish);
       }
@@ -6473,7 +6473,9 @@ document.getElementById('detailModal').addEventListener('click', function(e) {
   if (e.target === this) closeDetail();
 });
 document.getElementById('cartPanel').addEventListener('click', function(e) {
-  if (e.target === this) toggleCart();
+  if (e.target === this || e.target.classList.contains('cart-panel')) {
+    toggleCart();
+  }
 });
 document.getElementById('shareModal').addEventListener('click', function(e) {
   if (e.target === this) closeShare();
