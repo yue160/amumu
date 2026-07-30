@@ -664,14 +664,14 @@ function switchCat(catId) {
   renderAll();
 }
 
-function toggleDish(id, name, catId, catName) {
+async function toggleDish(id, name, catId, catName) {
   if (selectedDishes[id]) {
     delete selectedDishes[id];
   } else {
     selectedDishes[id] = { name, cat: catId, catName, owner: sessionId };
   }
   saveState();
-  cloudSave();
+  await cloudSave();
   bc.postMessage({ type: 'update', session: sessionId, dishes: selectedDishes });
   renderAll();
 }
@@ -714,7 +714,7 @@ function toggleCart() {
   renderCart();
 }
 
-function placeOrder() {
+async function placeOrder() {
   const total = Object.keys(selectedDishes).length;
   if (total === 0) {
     showToast('请先选择菜品');
@@ -733,12 +733,14 @@ function placeOrder() {
   // Clear cart
   selectedDishes = {};
   saveState();
-  cloudSave();
-  bc.postMessage({ type: 'update', session: sessionId, dishes: {} });
   
+  // Wait for cloud save to complete before closing cart
+  await cloudSave();
+  showToast('✅ 下单成功！对方刷新后可见');
+  
+  bc.postMessage({ type: 'update', session: sessionId, dishes: {} });
   renderAll();
   toggleCart();
-  showToast('✅ 下单成功！对方刷新后可见');
 }
 
 function openHistory() {
