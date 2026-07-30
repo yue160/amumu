@@ -392,30 +392,35 @@ if (sharedBlobUrl && !localStorage.getItem(CLOUD_URL_KEY)) {
   localStorage.setItem(CLOUD_URL_KEY, sharedBlobUrl);
 }
 let syncTimer = null;
-let lastCloudTime = 0;
+let lastSyncSave = 0;  // 上次自己保存的时间戳，用来避免回声
+let isSyncing = false;  // 防止并发
 
 if (sharedSession && blobUrl) {
-  // We joined via shared link, show notification
   setTimeout(() => showToast('已加入共享选菜'), 500);
 }
 
+// 生成唯一订单ID
+function genOrderId() {
+  return Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 8);
+}
+
 async function cloudSave() {
-  const data = {
-    selectedDishes: selectedDishes,
-    orders: orders.slice(0, 20),
-    sessionId: sessionId,
-    lastUpdate: Date.now()
-  };
+  // 防止并发写
   try {
+    const data = {
+      selectedDishes: selectedDishes,
+      orders: orders.slice(0, 50),   // 保留所有订单
+      sessionId: sessionId,
+      lastUpdate: Date.now()
+    };
+    lastSyncSave = data.lastUpdate;  // 记住自己的保存时间
     if (blobUrl) {
-      // Update existing blob
       await fetch(blobUrl, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
     } else {
-      // Create new blob
       const resp = await fetch('https://jsonblob.com/api/jsonBlob', {
         method: 'POST',
         headers: {
@@ -425,7 +430,6 @@ async function cloudSave() {
         body: JSON.stringify(data)
       });
       if (resp.ok) {
-        // Get blob ID from response header
         const blobId = resp.headers.get('X-jsonblob-id') || resp.headers.get('x-jsonblob-id');
         const location = resp.headers.get('Location');
         if (blobId) {
@@ -438,12 +442,12 @@ async function cloudSave() {
         }
       }
     }
-    lastCloudTime = Date.now();
   } catch(e) { console.log('Cloud save error:', e); }
 }
 
 async function cloudLoad() {
-  if (!blobUrl) return false;
+  if (!blobUrl || isSyncing) return false;
+  isSyncing = true;
   try {
     const resp = await fetch(blobUrl, {
       headers: { 'Accept': 'application/json' },
@@ -451,66 +455,81 @@ async function cloudLoad() {
     });
     if (resp.ok) {
       const data = await resp.json();
-      if (data.sessionId === sessionId && data.lastUpdate > lastCloudTime) {
-        let updated = false;
-        
-        // Merge selected dishes
-        if (data.selectedDishes) {
-          const merged = { ...selectedDishes };
-          Object.entries(data.selectedDishes).forEach(([id, info]) => {
-            if (!merged[id]) {
-              merged[id] = info;
-              updated = true;
-            }
-          });
-          if (updated) selectedDishes = merged;
-        }
-        
-        // Merge orders
-        if (data.orders && data.orders.length > 0) {
-          const existingKeys = new Set(orders.map(o => o.time));
-          let hasNew = false;
-          data.orders.forEach(o => {
-            if (!existingKeys.has(o.time)) {
-              orders.unshift(o);
-              existingKeys.add(o.time);
-              hasNew = true;
-            }
-          });
-          orders = orders.slice(0, 50);
-          if (hasNew) {
-            showToast('📋 对方有新订单！');
+      // 跳过自己刚保存的数据（回声防护）
+      if (data.lastUpdate === lastSyncSave) {
+        isSyncing = false;
+        return false;
+      }
+      let updated = false;
+
+      // === 合并选菜（只增不删）===
+      if (data.selectedDishes) {
+        const merged = { ...selectedDishes };
+        Object.entries(data.selectedDishes).forEach(([id, info]) => {
+          if (!merged[id]) {
+            merged[id] = info;
             updated = true;
           }
-        }
-        
-        lastCloudTime = data.lastUpdate;
-        if (updated) {
-          saveState();
-          renderAll();
-        }
-        return updated;
+        });
+        if (updated) selectedDishes = merged;
       }
+
+      // === 合并订单（按 orderId 去重，取最新）===
+      if (data.orders && data.orders.length > 0) {
+        // 用 orderId 去重，没有 orderId 的用 time 去重
+        const existingIds = new Set();
+        const existingTimes = new Set();
+        orders.forEach(o => {
+          if (o.orderId) existingIds.add(o.orderId);
+          existingTimes.add(o.time);
+        });
+        let hasNew = false;
+        data.orders.forEach(o => {
+          const oid = o.orderId || o.time;
+          if (!existingIds.has(oid) && !existingTimes.has(o.time)) {
+            orders.unshift(o);
+            if (o.orderId) existingIds.add(o.orderId);
+            existingTimes.add(o.time);
+            hasNew = true;
+          }
+        });
+        // 排序：最新的在前
+        orders.sort((a, b) => (b.orderId || b.time || '').localeCompare(a.orderId || a.time || ''));
+        orders = orders.slice(0, 50);
+        if (hasNew) {
+          showToast('📋 对方有新订单！');
+          updated = true;
+        }
+      }
+
+      if (updated) {
+        saveState();
+        renderAll();
+      }
+      isSyncing = false;
+      return updated;
     }
   } catch(e) { console.log('Cloud load error:', e.message); }
+  isSyncing = false;
   return false;
 }
 
 function startSync() {
-  // Initial cloud sync: if we have a blobUrl (from share link), load first; otherwise create
+  // 初始同步
   if (blobUrl) {
+    // 有 blobUrl（分享链接进入），先加载
     cloudLoad().then(hasUpdate => {
       if (hasUpdate) {
         showToast('📋 已同步最新数据');
       }
     });
   } else if (isHost) {
-    // Only host creates new blob
+    // host 创建新的 blob
     cloudSave();
   }
   
-  // Poll every 3 seconds for cloud updates
-  syncTimer = setInterval(cloudLoad, 3000);
+  // 每 2 秒轮询
+  syncTimer = setInterval(cloudLoad, 2000);
 }
 
 // Load from localStorage
@@ -731,6 +750,7 @@ async function placeOrder() {
   }
   
   const order = {
+    orderId: genOrderId(),  // 唯一ID，用于跨设备去重
     time: new Date().toLocaleString('zh-CN'),
     dishes: Object.entries(selectedDishes).map(([id, info]) => ({ id, name: info.name, cat: info.catName, owner: info.owner || sessionId })),
     sessionId: sessionId
@@ -739,13 +759,13 @@ async function placeOrder() {
   orders.unshift(order);
   if (orders.length > 50) orders = orders.slice(0, 50);
   
-  // Clear cart
+  // 清空购物车
   selectedDishes = {};
   saveState();
   
-  // Wait for cloud save to complete before closing cart
+  // 立即保存到云端（等待完成）
   await cloudSave();
-  showToast('✅ 下单成功！对方刷新后可见');
+  showToast('✅ 下单成功！对方会实时收到订单');
   
   bc.postMessage({ type: 'update', session: sessionId, dishes: {} });
   renderAll();
