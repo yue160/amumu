@@ -1,0 +1,9 @@
+*.pyc
+__pycache__/
+screenshot_*.png
+step*.png
+.playwright/
+github_token.txt
+*.png
+deploy.py
+deploy_github.py

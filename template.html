@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="阿沐的菜单">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+<title>阿沐的菜单</title>
+<style>
+:root {
+  --bg: #faf7f2;
+  --card: #ffffff;
+  --text: #2c2416;
+  --text2: #6b5e4a;
+  --accent: #d4956b;
+  --accent2: #b8754e;
+  --border: #e8ddd0;
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+  --sidebar-bg: #2c2416;
+  --sidebar-text: #d4c8b0;
+  --sidebar-active: #d4956b;
+  --cart-bg: #fffdf8;
+  --tag-bg: #f5ede0;
+  --tag-text: #8b7355;
+  --green: #6ba87a;
+  --red: #c4544a;
+  --orange: #e8993a;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; font-family:var(--font); background:var(--bg); color:var(--text); -webkit-tap-highlight-color:transparent; }
+body { display:flex; }
+
+/* === Sidebar === */
+.sidebar {
+  width:88px; min-width:88px; background:var(--sidebar-bg);
+  display:flex; flex-direction:column; overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.sidebar .logo {
+  padding:16px 8px; text-align:center;
+  font-size:20px; font-weight:700; color:var(--sidebar-active);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  letter-spacing:2px;
+}
+.nav-item {
+  display:flex; flex-direction:column; align-items:center; padding:14px 4px;
+  color:var(--sidebar-text); cursor:pointer; transition:all .2s;
+  border-left:3px solid transparent; font-size:12px; gap:4px;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-item .icon { font-size:22px; line-height:1; }
+.nav-item .label { font-size:10px; white-space:nowrap; }
+.nav-item.active {
+  background:rgba(212,149,107,.15); color:var(--sidebar-active);
+  border-left-color:var(--sidebar-active);
+}
+.nav-item:active { background:rgba(255,255,255,.05); }
+
+/* === Main === */
+.main {
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+  min-width:0;
+}
+.header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; background:var(--card); border-bottom:1px solid var(--border);
+  z-index:10;
+}
+.header .title { font-size:18px; font-weight:700; }
+.header .actions { display:flex; gap:8px; }
+.btn {
+  display:inline-flex; align-items:center; gap:4px; padding:8px 14px;
+  border:none; border-radius:var(--radius-sm); font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .15s; font-family:var(--font);
+  -webkit-tap-highlight-color:transparent;
+}
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:active { background:var(--accent2); }
+.btn-outline { background:transparent; color:var(--accent); border:1.5px solid var(--accent); }
+.btn-outline:active { background:rgba(212,149,107,.1); }
+.btn-sm { padding:5px 10px; font-size:11px; }
+
+.content {
+  flex:1; overflow-y:auto; padding:16px;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* === Category Header === */
+.cat-header {
+  margin-bottom:16px;
+}
+.cat-header h2 { font-size:22px; display:flex; align-items:center; gap:8px; }
+.cat-header .count { font-size:13px; color:var(--text2); font-weight:400; }
+
+/* === Dish Card === */
+.dish-grid {
+  display:grid; grid-template-columns:1fr; gap:10px;
+}
+@media (min-width:500px) { .dish-grid { grid-template-columns:1fr 1fr; } }
+@media (min-width:768px) { .dish-grid { grid-template-columns:1fr 1fr 1fr; } }
+
+.dish-card {
+  background:var(--card); border-radius:var(--radius); padding:14px;
+  box-shadow:var(--shadow); display:flex; align-items:center; gap:12px;
+  cursor:pointer; transition:all .15s; border:2px solid transparent;
+  -webkit-tap-highlight-color:transparent;
+}
+.dish-card:active { transform:scale(.98); }
+.dish-card.selected { border-color:var(--accent); background:#fdf6f0; }
+.dish-card .dish-icon {
+  width:40px; height:40px; border-radius:var(--radius-sm);
+  background:var(--tag-bg); display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+}
+.dish-card .dish-info { flex:1; min-width:0; }
+.dish-card .dish-name { font-size:15px; font-weight:600; margin-bottom:2px; }
+.dish-card .dish-hint { font-size:11px; color:var(--text2); }
+.dish-card .dish-check {
+  width:22px; height:22px; border-radius:50%; border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:all .2s; font-size:12px; color:transparent;
+}
+.dish-card.selected .dish-check {
+  background:var(--accent); border-color:var(--accent); color:#fff;
+}
+
+/* === Modal === */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:100;
+  display:flex; align-items:flex-end; justify-content:center;
+  animation:fadeIn .2s;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal-sheet {
+  background:var(--card); border-radius:20px 20px 0 0;
+  width:100%; max-width:600px; max-height:85vh; overflow-y:auto;
+  padding:0; animation:slideUp .3s;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-handle {
+  width:36px; height:5px; background:#ddd; border-radius:3px;
+  margin:10px auto 0;
+}
+.modal-header {
+  padding:16px 20px 8px; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; background:var(--card); z-index:1;
+}
+.modal-header h3 { font-size:20px; }
+.modal-close {
+  width:32px; height:32px; border-radius:50%; border:none;
+  background:var(--border); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.modal-body { padding:8px 20px 24px; }
+.modal-section { margin-bottom:20px; }
+.modal-section h4 {
+  font-size:14px; color:var(--accent); margin-bottom:10px;
+  display:flex; align-items:center; gap:6px;
+}
+.ingredient-list { list-style:none; }
+.ingredient-list li {
+  display:flex; justify-content:space-between; padding:8px 12px;
+  background:var(--tag-bg); border-radius:var(--radius-sm); margin-bottom:6px;
+  font-size:14px;
+}
+.ingredient-list .ing-name { font-weight:500; }
+.ingredient-list .ing-amount { color:var(--text2); }
+.step-list { list-style:none; counter-reset:step; }
+.step-list li {
+  counter-increment:step; padding:10px 10px 10px 40px; position:relative;
+  border-left:2px solid var(--border); margin-left:12px; font-size:14px; line-height:1.6;
+}
+.step-list li::before {
+  content:counter(step); position:absolute; left:-15px; top:10px;
+  width:26px; height:26px; border-radius:50%; background:var(--accent);
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700;
+}
+.step-list li:last-child { border-left-color:transparent; }
+
+/* === Cart Panel === */
+.cart-fab {
+  position:fixed; bottom:24px; right:20px; width:56px; height:56px;
+  border-radius:50%; background:var(--accent); color:#fff; border:none;
+  font-size:22px; cursor:pointer; box-shadow:0 4px 16px rgba(180,100,60,.4);
+  z-index:50; display:flex; align-items:center; justify-content:center;
+  transition:all .2s; -webkit-tap-highlight-color:transparent;
+}
+.cart-fab:active { transform:scale(.9); }
+.cart-fab .badge {
+  position:absolute; top:-4px; right:-4px; min-width:20px; height:20px;
+  border-radius:10px; background:var(--red); color:#fff; font-size:11px;
+  font-weight:700; display:flex; align-items:center; justify-content:center; padding:0 6px;
+}
+.cart-panel {
+  position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200;
+  display:flex; align-items:flex-end; justify-content:center;
+  animation:fadeIn .2s;
+}
+.cart-panel.hidden { display:none; }
+.cart-sheet {
+  background:var(--cart-bg); border-radius:20px 20px 0 0;
+  width:100%; max-width:600px; max-height:85vh; overflow-y:auto;
+  animation:slideUp .3s; padding:0;
+}
+.cart-header {
+  padding:16px 20px; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--cart-bg); z-index:1;
+}
+.cart-header h3 { font-size:18px; }
+.cart-body { padding:16px 20px; }
+.cart-section { margin-bottom:20px; }
+.cart-section h4 {
+  font-size:14px; color:var(--text2); margin-bottom:10px;
+  display:flex; align-items:center; gap:6px;
+}
+.cart-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 0; border-bottom:1px solid var(--border);
+}
+.cart-item .ci-name { font-size:14px; font-weight:500; }
+.cart-item .ci-cat { font-size:11px; color:var(--text2); }
+.cart-item .ci-remove {
+  width:24px; height:24px; border-radius:50%; border:none;
+  background:transparent; color:var(--red); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.cart-empty { text-align:center; padding:40px 0; color:var(--text2); font-size:14px; }
+.cart-footer { padding:16px 20px; border-top:1px solid var(--border); }
+.cart-footer .btn { width:100%; justify-content:center; padding:12px; font-size:15px; }
+
+/* === Order History === */
+.history-page {
+  position:fixed; inset:0; background:var(--bg); z-index:300;
+  display:flex; flex-direction:column; animation:fadeIn .2s;
+}
+.history-page.hidden { display:none; }
+.history-header {
+  padding:12px 16px; display:flex; align-items:center; gap:12px;
+  background:var(--card); border-bottom:1px solid var(--border);
+}
+.history-header h3 { font-size:18px; flex:1; text-align:center; }
+.history-body { flex:1; overflow-y:auto; padding:16px; }
+.order-card {
+  background:var(--card); border-radius:var(--radius); padding:16px;
+  margin-bottom:12px; box-shadow:var(--shadow);
+}
+.order-card .order-time { font-size:12px; color:var(--text2); margin-bottom:8px; }
+.order-card .order-dishes { font-size:14px; line-height:1.8; }
+.order-card .order-dish {
+  display:inline-block; background:var(--tag-bg); color:var(--tag-text);
+  padding:2px 8px; border-radius:4px; margin:2px 4px; font-size:12px;
+}
+
+/* === Toast === */
+.toast {
+  position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:500;
+  background:#2c2416; color:#fff; padding:10px 24px; border-radius:20px;
+  font-size:14px; font-weight:600; animation:toastIn .3s;
+  pointer-events:none;
+}
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(-10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+/* === Share Modal === */
+.share-modal {
+  position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:250;
+  display:flex; align-items:center; justify-content:center;
+  animation:fadeIn .2s;
+}
+.share-modal.hidden { display:none; }
+.share-card {
+  background:var(--card); border-radius:var(--radius); padding:24px;
+  width:90%; max-width:380px; text-align:center;
+}
+.share-card h4 { font-size:18px; margin-bottom:12px; }
+.share-card .share-url {
+  background:var(--tag-bg); padding:12px; border-radius:var(--radius-sm);
+  font-size:12px; word-break:break-all; color:var(--text2); margin-bottom:16px;
+}
+.share-card .share-hint { font-size:13px; color:var(--text2); margin-bottom:12px; }
+.share-card .share-status { font-size:13px; color:var(--green); margin-bottom:12px; font-weight:600; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:#d5c8b0; border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar"></aside>
+
+<!-- Main Content -->
+<div class="main">
+  <div class="header">
+    <div class="title" id="pageTitle">阿沐的菜单</div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm" onclick="openShare()" title="分享">🔗 分享</button>
+      <button class="btn btn-outline btn-sm" onclick="openHistory()" title="历史订单">📜 历史</button>
+    </div>
+  </div>
+  <div class="content" id="dishContent"></div>
+</div>
+
+<!-- FAB Cart Button -->
+<button class="cart-fab" id="cartFab" onclick="toggleCart()">
+  🛒<span class="badge" id="cartBadge" style="display:none">0</span>
+</button>
+
+<!-- Cart Panel -->
+<div class="cart-panel hidden" id="cartPanel">
+  <div class="cart-sheet">
+    <div class="cart-header">
+      <div class="modal-handle"></div>
+      <h3>🛒 购物车</h3>
+      <button class="modal-close" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer">
+      <button class="btn btn-primary" onclick="placeOrder()">📋 下单</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay hidden" id="detailModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h3 id="detailTitle"></h3>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="share-modal hidden" id="shareModal">
+  <div class="share-card">
+    <h4>🔗 分享选菜</h4>
+    <p class="share-hint">复制链接发给朋友，一起选菜吧！</p>
+    <div class="share-url" id="shareUrl"></div>
+    <div class="share-status" id="shareStatus"></div>
+    <button class="btn btn-primary" onclick="copyShareLink()" style="margin-right:8px;">📋 复制链接</button>
+    <button class="btn btn-outline" onclick="closeShare()">关闭</button>
+  </div>
+</div>
+
+<!-- Order History Page -->
+<div class="history-page hidden" id="historyPage">
+  <div class="history-header">
+    <button class="btn btn-outline btn-sm" onclick="closeHistory()">← 返回</button>
+    <h3>📜 历史订单</h3>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="history-body" id="historyBody"></div>
+</div>
+
+<script>
+// ===== DATA =====
+const MENU_DATA = __EMBED_DATA__;
+
+// ===== STATE =====
+let currentCat = 'chuancai';
+let selectedDishes = {}; // {dishId: {name, cat, catName, owner}}
+let orders = []; // [{time, dishes:[], sessionId}]
+let sessionId = generateId();
+
+// Parse URL for shared session
+const urlParams = new URLSearchParams(window.location.search);
+const sharedSession = urlParams.get('session');
+if (sharedSession) {
+  sessionId = sharedSession;
+  showToast('已加入共享选菜');
+}
+
+// Load from localStorage
+try {
+  const saved = localStorage.getItem('amumu_selected');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    // Only load if same session or no session stored
+    const savedSession = localStorage.getItem('amumu_session');
+    if (!savedSession || savedSession === sessionId) {
+      selectedDishes = parsed;
+    }
+  }
+  localStorage.setItem('amumu_session', sessionId);
+  
+  const savedOrders = localStorage.getItem('amumu_orders');
+  if (savedOrders) { orders = JSON.parse(savedOrders); }
+} catch(e) {}
+
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
+
+function saveState() {
+  try {
+    localStorage.setItem('amumu_selected', JSON.stringify(selectedDishes));
+    localStorage.setItem('amumu_session', sessionId);
+    localStorage.setItem('amumu_orders', JSON.stringify(orders));
+  } catch(e) {}
+}
+
+// Sync across tabs
+const bc = new BroadcastChannel('amumu_cart');
+bc.onmessage = (e) => {
+  if (e.data.type === 'update' && e.data.session === sessionId) {
+    selectedDishes = e.data.dishes;
+    renderAll();
+  }
+};
+
+// ===== RENDER =====
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '<div class="logo">阿沐<br>菜单</div>' + MENU_DATA.categories.map(cat => `
+    <div class="nav-item ${cat.id === currentCat ? 'active' : ''}" onclick="switchCat('${cat.id}')">
+      <span class="icon">${cat.icon}</span>
+      <span class="label">${cat.name}</span>
+    </div>
+  `).join('');
+}
+
+function renderContent() {
+  const cat = MENU_DATA.categories.find(c => c.id === currentCat);
+  if (!cat) return;
+  
+  document.getElementById('pageTitle').textContent = cat.icon + ' ' + cat.name;
+  
+  const content = document.getElementById('dishContent');
+  const catSelected = cat.dishes.filter(d => selectedDishes[d.id]).length;
+  
+  content.innerHTML = `
+    <div class="cat-header">
+      <h2>${cat.icon} ${cat.name} <span class="count">${cat.dishes.length}道 · 已选${catSelected}道</span></h2>
+    </div>
+    <div class="dish-grid">
+      ${cat.dishes.map(d => `
+        <div class="dish-card ${selectedDishes[d.id] ? 'selected' : ''}" onclick="toggleDish('${d.id}','${d.name}','${cat.id}','${cat.name}')">
+          <div class="dish-icon">🍽️</div>
+          <div class="dish-info">
+            <div class="dish-name">${d.name}</div>
+            <div class="dish-hint">${d.ingredients.length}种食材 · ${d.steps.length}步制作</div>
+          </div>
+          <div class="dish-check">✓</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  
+  // Rebind click on dish cards for detail
+  content.querySelectorAll('.dish-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+      // Don't trigger if clicking the check area only (handled by toggleDish)
+      const dishId = this.querySelector('.dish-name').textContent;
+      // Find the dish
+      const dish = cat.dishes.find(d => d.name === dishId);
+      if (dish) {
+        openDetail(dish);
+      }
+    });
+  });
+}
+
+function renderCart() {
+  const body = document.getElementById('cartBody');
+  const myDishes = [];
+  const friendDishes = [];
+  
+  Object.entries(selectedDishes).forEach(([id, info]) => {
+    if (info.owner === sessionId || !info.owner) {
+      myDishes.push({id, ...info});
+    } else {
+      friendDishes.push({id, ...info});
+    }
+  });
+  
+  let html = '';
+  
+  if (myDishes.length === 0 && friendDishes.length === 0) {
+    html = '<div class="cart-empty">🛒 购物车是空的<br><span style="font-size:12px;">去菜单里选菜吧~</span></div>';
+  } else {
+    if (myDishes.length > 0) {
+      html += '<div class="cart-section"><h4>👤 我的选择</h4>';
+      myDishes.forEach(d => {
+        html += `<div class="cart-item">
+          <div><div class="ci-name">${d.name}</div><div class="ci-cat">${d.catName}</div></div>
+          <button class="ci-remove" onclick="removeDish('${d.id}')">✕</button>
+        </div>`;
+      });
+      html += '</div>';
+    }
+    if (friendDishes.length > 0) {
+      html += '<div class="cart-section"><h4>👥 朋友的选择</h4>';
+      friendDishes.forEach(d => {
+        html += `<div class="cart-item">
+          <div><div class="ci-name">${d.name}</div><div class="ci-cat">${d.catName}</div></div>
+          <span style="font-size:11px;color:var(--text2)">已选</span>
+        </div>`;
+      });
+      html += '</div>';
+    }
+  }
+  
+  body.innerHTML = html;
+  
+  // Update badge
+  const total = Object.keys(selectedDishes).length;
+  const badge = document.getElementById('cartBadge');
+  if (total > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = total;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function renderAll() {
+  renderSidebar();
+  renderContent();
+  renderCart();
+}
+
+// ===== ACTIONS =====
+function switchCat(catId) {
+  currentCat = catId;
+  renderAll();
+}
+
+function toggleDish(id, name, catId, catName) {
+  if (selectedDishes[id]) {
+    delete selectedDishes[id];
+  } else {
+    selectedDishes[id] = { name, cat: catId, catName, owner: sessionId };
+  }
+  saveState();
+  // Broadcast to other tabs
+  bc.postMessage({ type: 'update', session: sessionId, dishes: selectedDishes });
+  renderAll();
+}
+
+function removeDish(id) {
+  delete selectedDishes[id];
+  saveState();
+  bc.postMessage({ type: 'update', session: sessionId, dishes: selectedDishes });
+  renderAll();
+}
+
+function openDetail(dish) {
+  document.getElementById('detailTitle').textContent = '🍽️ ' + dish.name;
+  document.getElementById('detailBody').innerHTML = `
+    <div class="modal-section">
+      <h4>🥬 所需食材（${dish.ingredients.length}种）</h4>
+      <ul class="ingredient-list">
+        ${dish.ingredients.map(i => `
+          <li><span class="ing-name">${i.name}</span><span class="ing-amount">${i.amount}</span></li>
+        `).join('')}
+      </ul>
+    </div>
+    <div class="modal-section">
+      <h4>📝 制作教程（${dish.steps.length}步）</h4>
+      <ol class="step-list">
+        ${dish.steps.map(s => `<li>${s}</li>`).join('')}
+      </ol>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+
+function closeDetail() {
+  document.getElementById('detailModal').classList.add('hidden');
+}
+
+function toggleCart() {
+  document.getElementById('cartPanel').classList.toggle('hidden');
+  renderCart();
+}
+
+function placeOrder() {
+  const total = Object.keys(selectedDishes).length;
+  if (total === 0) {
+    showToast('请先选择菜品');
+    return;
+  }
+  
+  const order = {
+    time: new Date().toLocaleString('zh-CN'),
+    dishes: Object.entries(selectedDishes).map(([id, info]) => ({ id, name: info.name, cat: info.catName })),
+    sessionId: sessionId
+  };
+  
+  orders.unshift(order);
+  if (orders.length > 50) orders = orders.slice(0, 50); // Keep last 50
+  
+  // Clear cart
+  selectedDishes = {};
+  saveState();
+  bc.postMessage({ type: 'update', session: sessionId, dishes: {} });
+  
+  renderAll();
+  toggleCart();
+  showToast('✅ 下单成功！');
+}
+
+function openHistory() {
+  document.getElementById('historyPage').classList.remove('hidden');
+  const body = document.getElementById('historyBody');
+  
+  if (orders.length === 0) {
+    body.innerHTML = '<div class="cart-empty">📜 暂无历史订单<br><span style="font-size:12px;">选好菜下单后这里会显示记录~</span></div>';
+  } else {
+    body.innerHTML = orders.map((order, idx) => `
+      <div class="order-card">
+        <div class="order-time">📅 ${order.time}</div>
+        <div class="order-dishes">
+          ${order.dishes.map(d => `<span class="order-dish">${d.name}</span>`).join(' ')}
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;">共 ${order.dishes.length} 道菜</div>
+      </div>
+    `).join('');
+  }
+}
+
+function closeHistory() {
+  document.getElementById('historyPage').classList.add('hidden');
+}
+
+function openShare() {
+  const url = new URL(window.location.href);
+  url.searchParams.set('session', sessionId);
+  document.getElementById('shareUrl').textContent = url.toString();
+  document.getElementById('shareStatus').textContent = '';
+  document.getElementById('shareModal').classList.remove('hidden');
+}
+
+function closeShare() {
+  document.getElementById('shareModal').classList.add('hidden');
+}
+
+function copyShareLink() {
+  const url = document.getElementById('shareUrl').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById('shareStatus').textContent = '✅ 链接已复制！发送给朋友吧~';
+    });
+  } else {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    document.getElementById('shareStatus').textContent = '✅ 链接已复制！发送给朋友吧~';
+  }
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.remove(); }, 2000);
+}
+
+// Close modals on overlay click
+document.getElementById('detailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDetail();
+});
+document.getElementById('cartPanel').addEventListener('click', function(e) {
+  if (e.target === this) toggleCart();
+});
+document.getElementById('shareModal').addEventListener('click', function(e) {
+  if (e.target === this) closeShare();
+});
+
+// ===== PWA Service Worker =====
+if ('serviceWorker' in navigator) {
+  const swCode = `
+const CACHE = 'amumu-v1';
+const URLS = ['/amumu/'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      if (res.ok) {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+      }
+      return res;
+    }))
+  );
+});
+`;
+  
+  const blob = new Blob([swCode], {type: 'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl, {scope: '/amumu/'}).catch(() => {});
+}
+
+// ===== INIT =====
+renderAll();
+
+// Poll localStorage for shared changes (in case BroadcastChannel not available)
+setInterval(() => {
+  try {
+    const saved = localStorage.getItem('amumu_selected');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const savedSession = localStorage.getItem('amumu_session');
+      if (savedSession === sessionId) {
+        // Check if different from current
+        const currentKeys = Object.keys(selectedDishes).sort().join(',');
+        const savedKeys = Object.keys(parsed).sort().join(',');
+        if (currentKeys !== savedKeys) {
+          selectedDishes = parsed;
+          renderAll();
+        }
+      }
+    }
+  } catch(e) {}
+}, 2000);
+</script>
+</body>
+</html>

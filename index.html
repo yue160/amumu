@@ -1,0 +1,6540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="阿沐的菜单">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+<title>阿沐的菜单</title>
+<style>
+:root {
+  --bg: #faf7f2;
+  --card: #ffffff;
+  --text: #2c2416;
+  --text2: #6b5e4a;
+  --accent: #d4956b;
+  --accent2: #b8754e;
+  --border: #e8ddd0;
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+  --sidebar-bg: #2c2416;
+  --sidebar-text: #d4c8b0;
+  --sidebar-active: #d4956b;
+  --cart-bg: #fffdf8;
+  --tag-bg: #f5ede0;
+  --tag-text: #8b7355;
+  --green: #6ba87a;
+  --red: #c4544a;
+  --orange: #e8993a;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; font-family:var(--font); background:var(--bg); color:var(--text); -webkit-tap-highlight-color:transparent; }
+body { display:flex; }
+
+/* === Sidebar === */
+.sidebar {
+  width:88px; min-width:88px; background:var(--sidebar-bg);
+  display:flex; flex-direction:column; overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.sidebar .logo {
+  padding:16px 8px; text-align:center;
+  font-size:20px; font-weight:700; color:var(--sidebar-active);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  letter-spacing:2px;
+}
+.nav-item {
+  display:flex; flex-direction:column; align-items:center; padding:14px 4px;
+  color:var(--sidebar-text); cursor:pointer; transition:all .2s;
+  border-left:3px solid transparent; font-size:12px; gap:4px;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-item .icon { font-size:22px; line-height:1; }
+.nav-item .label { font-size:10px; white-space:nowrap; }
+.nav-item.active {
+  background:rgba(212,149,107,.15); color:var(--sidebar-active);
+  border-left-color:var(--sidebar-active);
+}
+.nav-item:active { background:rgba(255,255,255,.05); }
+
+/* === Main === */
+.main {
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+  min-width:0;
+}
+.header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; background:var(--card); border-bottom:1px solid var(--border);
+  z-index:10;
+}
+.header .title { font-size:18px; font-weight:700; }
+.header .actions { display:flex; gap:8px; }
+.btn {
+  display:inline-flex; align-items:center; gap:4px; padding:8px 14px;
+  border:none; border-radius:var(--radius-sm); font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .15s; font-family:var(--font);
+  -webkit-tap-highlight-color:transparent;
+}
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:active { background:var(--accent2); }
+.btn-outline { background:transparent; color:var(--accent); border:1.5px solid var(--accent); }
+.btn-outline:active { background:rgba(212,149,107,.1); }
+.btn-sm { padding:5px 10px; font-size:11px; }
+
+.content {
+  flex:1; overflow-y:auto; padding:16px;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* === Category Header === */
+.cat-header {
+  margin-bottom:16px;
+}
+.cat-header h2 { font-size:22px; display:flex; align-items:center; gap:8px; }
+.cat-header .count { font-size:13px; color:var(--text2); font-weight:400; }
+
+/* === Dish Card === */
+.dish-grid {
+  display:grid; grid-template-columns:1fr; gap:10px;
+}
+@media (min-width:500px) { .dish-grid { grid-template-columns:1fr 1fr; } }
+@media (min-width:768px) { .dish-grid { grid-template-columns:1fr 1fr 1fr; } }
+
+.dish-card {
+  background:var(--card); border-radius:var(--radius); padding:14px;
+  box-shadow:var(--shadow); display:flex; align-items:center; gap:12px;
+  cursor:pointer; transition:all .15s; border:2px solid transparent;
+  -webkit-tap-highlight-color:transparent;
+}
+.dish-card:active { transform:scale(.98); }
+.dish-card.selected { border-color:var(--accent); background:#fdf6f0; }
+.dish-card .dish-icon {
+  width:40px; height:40px; border-radius:var(--radius-sm);
+  background:var(--tag-bg); display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+}
+.dish-card .dish-info { flex:1; min-width:0; }
+.dish-card .dish-name { font-size:15px; font-weight:600; margin-bottom:2px; }
+.dish-card .dish-hint { font-size:11px; color:var(--text2); }
+.dish-card .dish-check {
+  width:22px; height:22px; border-radius:50%; border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:all .2s; font-size:12px; color:transparent;
+}
+.dish-card.selected .dish-check {
+  background:var(--accent); border-color:var(--accent); color:#fff;
+}
+
+/* === Modal === */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:100;
+  display:flex; align-items:flex-end; justify-content:center;
+  animation:fadeIn .2s;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal-sheet {
+  background:var(--card); border-radius:20px 20px 0 0;
+  width:100%; max-width:600px; max-height:85vh; overflow-y:auto;
+  padding:0; animation:slideUp .3s;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-handle {
+  width:36px; height:5px; background:#ddd; border-radius:3px;
+  margin:10px auto 0;
+}
+.modal-header {
+  padding:16px 20px 8px; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; background:var(--card); z-index:1;
+}
+.modal-header h3 { font-size:20px; }
+.modal-close {
+  width:32px; height:32px; border-radius:50%; border:none;
+  background:var(--border); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.modal-body { padding:8px 20px 24px; }
+.modal-section { margin-bottom:20px; }
+.modal-section h4 {
+  font-size:14px; color:var(--accent); margin-bottom:10px;
+  display:flex; align-items:center; gap:6px;
+}
+.ingredient-list { list-style:none; }
+.ingredient-list li {
+  display:flex; justify-content:space-between; padding:8px 12px;
+  background:var(--tag-bg); border-radius:var(--radius-sm); margin-bottom:6px;
+  font-size:14px;
+}
+.ingredient-list .ing-name { font-weight:500; }
+.ingredient-list .ing-amount { color:var(--text2); }
+.step-list { list-style:none; counter-reset:step; }
+.step-list li {
+  counter-increment:step; padding:10px 10px 10px 40px; position:relative;
+  border-left:2px solid var(--border); margin-left:12px; font-size:14px; line-height:1.6;
+}
+.step-list li::before {
+  content:counter(step); position:absolute; left:-15px; top:10px;
+  width:26px; height:26px; border-radius:50%; background:var(--accent);
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700;
+}
+.step-list li:last-child { border-left-color:transparent; }
+
+/* === Cart Panel === */
+.cart-fab {
+  position:fixed; bottom:24px; right:20px; width:56px; height:56px;
+  border-radius:50%; background:var(--accent); color:#fff; border:none;
+  font-size:22px; cursor:pointer; box-shadow:0 4px 16px rgba(180,100,60,.4);
+  z-index:50; display:flex; align-items:center; justify-content:center;
+  transition:all .2s; -webkit-tap-highlight-color:transparent;
+}
+.cart-fab:active { transform:scale(.9); }
+.cart-fab .badge {
+  position:absolute; top:-4px; right:-4px; min-width:20px; height:20px;
+  border-radius:10px; background:var(--red); color:#fff; font-size:11px;
+  font-weight:700; display:flex; align-items:center; justify-content:center; padding:0 6px;
+}
+.cart-panel {
+  position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200;
+  display:flex; align-items:flex-end; justify-content:center;
+  animation:fadeIn .2s;
+}
+.cart-panel.hidden { display:none; }
+.cart-sheet {
+  background:var(--cart-bg); border-radius:20px 20px 0 0;
+  width:100%; max-width:600px; max-height:85vh; overflow-y:auto;
+  animation:slideUp .3s; padding:0;
+}
+.cart-header {
+  padding:16px 20px; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--cart-bg); z-index:1;
+}
+.cart-header h3 { font-size:18px; }
+.cart-body { padding:16px 20px; }
+.cart-section { margin-bottom:20px; }
+.cart-section h4 {
+  font-size:14px; color:var(--text2); margin-bottom:10px;
+  display:flex; align-items:center; gap:6px;
+}
+.cart-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 0; border-bottom:1px solid var(--border);
+}
+.cart-item .ci-name { font-size:14px; font-weight:500; }
+.cart-item .ci-cat { font-size:11px; color:var(--text2); }
+.cart-item .ci-remove {
+  width:24px; height:24px; border-radius:50%; border:none;
+  background:transparent; color:var(--red); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.cart-empty { text-align:center; padding:40px 0; color:var(--text2); font-size:14px; }
+.cart-footer { padding:16px 20px; border-top:1px solid var(--border); }
+.cart-footer .btn { width:100%; justify-content:center; padding:12px; font-size:15px; }
+
+/* === Order History === */
+.history-page {
+  position:fixed; inset:0; background:var(--bg); z-index:300;
+  display:flex; flex-direction:column; animation:fadeIn .2s;
+}
+.history-page.hidden { display:none; }
+.history-header {
+  padding:12px 16px; display:flex; align-items:center; gap:12px;
+  background:var(--card); border-bottom:1px solid var(--border);
+}
+.history-header h3 { font-size:18px; flex:1; text-align:center; }
+.history-body { flex:1; overflow-y:auto; padding:16px; }
+.order-card {
+  background:var(--card); border-radius:var(--radius); padding:16px;
+  margin-bottom:12px; box-shadow:var(--shadow);
+}
+.order-card .order-time { font-size:12px; color:var(--text2); margin-bottom:8px; }
+.order-card .order-dishes { font-size:14px; line-height:1.8; }
+.order-card .order-dish {
+  display:inline-block; background:var(--tag-bg); color:var(--tag-text);
+  padding:2px 8px; border-radius:4px; margin:2px 4px; font-size:12px;
+}
+
+/* === Toast === */
+.toast {
+  position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:500;
+  background:#2c2416; color:#fff; padding:10px 24px; border-radius:20px;
+  font-size:14px; font-weight:600; animation:toastIn .3s;
+  pointer-events:none;
+}
+@keyframes toastIn { from{opacity:0;transform:translateX(-50%) translateY(-10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+/* === Share Modal === */
+.share-modal {
+  position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:250;
+  display:flex; align-items:center; justify-content:center;
+  animation:fadeIn .2s;
+}
+.share-modal.hidden { display:none; }
+.share-card {
+  background:var(--card); border-radius:var(--radius); padding:24px;
+  width:90%; max-width:380px; text-align:center;
+}
+.share-card h4 { font-size:18px; margin-bottom:12px; }
+.share-card .share-url {
+  background:var(--tag-bg); padding:12px; border-radius:var(--radius-sm);
+  font-size:12px; word-break:break-all; color:var(--text2); margin-bottom:16px;
+}
+.share-card .share-hint { font-size:13px; color:var(--text2); margin-bottom:12px; }
+.share-card .share-status { font-size:13px; color:var(--green); margin-bottom:12px; font-weight:600; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:#d5c8b0; border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar"></aside>
+
+<!-- Main Content -->
+<div class="main">
+  <div class="header">
+    <div class="title" id="pageTitle">阿沐的菜单</div>
+    <div class="actions">
+      <button class="btn btn-outline btn-sm" onclick="openShare()" title="分享">🔗 分享</button>
+      <button class="btn btn-outline btn-sm" onclick="openHistory()" title="历史订单">📜 历史</button>
+    </div>
+  </div>
+  <div class="content" id="dishContent"></div>
+</div>
+
+<!-- FAB Cart Button -->
+<button class="cart-fab" id="cartFab" onclick="toggleCart()">
+  🛒<span class="badge" id="cartBadge" style="display:none">0</span>
+</button>
+
+<!-- Cart Panel -->
+<div class="cart-panel hidden" id="cartPanel">
+  <div class="cart-sheet">
+    <div class="cart-header">
+      <div class="modal-handle"></div>
+      <h3>🛒 购物车</h3>
+      <button class="modal-close" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-footer">
+      <button class="btn btn-primary" onclick="placeOrder()">📋 下单</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay hidden" id="detailModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h3 id="detailTitle"></h3>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- Share Modal -->
+<div class="share-modal hidden" id="shareModal">
+  <div class="share-card">
+    <h4>🔗 分享选菜</h4>
+    <p class="share-hint">复制链接发给朋友，一起选菜吧！</p>
+    <div class="share-url" id="shareUrl"></div>
+    <div class="share-status" id="shareStatus"></div>
+    <button class="btn btn-primary" onclick="copyShareLink()" style="margin-right:8px;">📋 复制链接</button>
+    <button class="btn btn-outline" onclick="closeShare()">关闭</button>
+  </div>
+</div>
+
+<!-- Order History Page -->
+<div class="history-page hidden" id="historyPage">
+  <div class="history-header">
+    <button class="btn btn-outline btn-sm" onclick="closeHistory()">← 返回</button>
+    <h3>📜 历史订单</h3>
+    <div style="width:60px;"></div>
+  </div>
+  <div class="history-body" id="historyBody"></div>
+</div>
+
+<script>
+// ===== DATA =====
+const MENU_DATA = {
+  "categories": [
+    {
+      "id": "chuancai",
+      "name": "川菜",
+      "icon": "🌶️",
+      "dishes": [
+        {
+          "id": "cc01",
+          "name": "麻婆豆腐",
+          "ingredients": [
+            {
+              "name": "嫩豆腐",
+              "amount": "1块"
+            },
+            {
+              "name": "猪肉末",
+              "amount": "100g"
+            },
+            {
+              "name": "郫县豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "花椒粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "辣椒面",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "姜末",
+              "amount": "1小块"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "水淀粉",
+              "amount": "适量"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "豆腐切成2cm见方的小块，放入加了盐的开水中焯烫2分钟，捞出沥干备用",
+            "锅中倒油烧热，下入猪肉末炒至变色出油",
+            "加入豆瓣酱炒出红油，放入姜末、蒜末、辣椒面炒香",
+            "加入适量清水煮开，放入豆腐块，轻轻推匀",
+            "加入生抽调味，中火煮3-5分钟让豆腐入味",
+            "淋入水淀粉勾芡，汤汁浓稠后撒上花椒粉",
+            "出锅装盘，撒上葱花即可"
+          ]
+        },
+        {
+          "id": "cc02",
+          "name": "回锅肉",
+          "ingredients": [
+            {
+              "name": "五花肉",
+              "amount": "300g"
+            },
+            {
+              "name": "青蒜",
+              "amount": "3根"
+            },
+            {
+              "name": "郫县豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "甜面酱",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "豆豉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "蒜片",
+              "amount": "3瓣"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "五花肉整块冷水下锅，加姜片、料酒，煮至筷子能轻松插入（约20分钟）",
+            "捞出晾凉，切成约3mm厚的薄片",
+            "青蒜斜刀切段，蒜白和蒜叶分开",
+            "锅烧热不放油，下五花肉片煸炒至出油卷曲呈灯盏窝状",
+            "将肉拨到一边，用锅里的油炒香豆瓣酱出红油",
+            "加入豆豉、甜面酱、姜片、蒜片炒匀",
+            "放入蒜白翻炒几下，加白糖提鲜",
+            "最后放入蒜叶快速翻炒至断生即可出锅"
+          ]
+        },
+        {
+          "id": "cc03",
+          "name": "水煮鱼",
+          "ingredients": [
+            {
+              "name": "草鱼",
+              "amount": "1条（约750g）"
+            },
+            {
+              "name": "豆芽",
+              "amount": "200g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "15个"
+            },
+            {
+              "name": "花椒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "郫县豆瓣酱",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "葱段",
+              "amount": "3根"
+            },
+            {
+              "name": "鸡蛋清",
+              "amount": "1个"
+            },
+            {
+              "name": "淀粉",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "白胡椒粉",
+              "amount": "少许"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "草鱼去骨取净肉，斜刀片成约3mm厚的鱼片",
+            "鱼片加盐、料酒、蛋清、淀粉抓匀腌制20分钟",
+            "豆芽焯水铺在大碗底部",
+            "锅中倒油，下豆瓣酱炒出红油，加姜蒜葱炒香",
+            "加入足量清水烧开，加盐、胡椒粉调味",
+            "水开后转小火，将鱼片一片片滑入锅中",
+            "鱼片变白浮起即熟（约1-2分钟），连汤倒入铺有豆芽的碗中",
+            "另起锅烧热油，下干辣椒和花椒爆香",
+            "将热油浇在鱼片上，滋啦作响即成"
+          ]
+        },
+        {
+          "id": "cc04",
+          "name": "宫保鸡丁",
+          "ingredients": [
+            {
+              "name": "鸡胸肉",
+              "amount": "300g"
+            },
+            {
+              "name": "花生米",
+              "amount": "50g"
+            },
+            {
+              "name": "黄瓜",
+              "amount": "半根"
+            },
+            {
+              "name": "胡萝卜",
+              "amount": "半根"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "6个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "葱段",
+              "amount": "2根"
+            },
+            {
+              "name": "姜末",
+              "amount": "1小块"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡胸肉切丁，加盐、料酒、淀粉抓匀腌制15分钟",
+            "黄瓜、胡萝卜切丁备用",
+            "花生米小火炒至金黄酥脆备用",
+            "调碗汁：生抽、醋、白糖、淀粉、少量水混合搅匀",
+            "锅中倒油烧热，下鸡丁滑炒至变色盛出",
+            "锅中留底油，下干辣椒段、花椒小火炒香",
+            "加入姜末、蒜末、葱段爆香",
+            "倒入胡萝卜丁翻炒，再放入黄瓜丁和鸡丁",
+            "淋入碗汁快速翻炒均匀",
+            "最后撒入花生米翻匀即可出锅"
+          ]
+        },
+        {
+          "id": "cc05",
+          "name": "鱼香肉丝",
+          "ingredients": [
+            {
+              "name": "猪里脊肉",
+              "amount": "250g"
+            },
+            {
+              "name": "木耳",
+              "amount": "50g"
+            },
+            {
+              "name": "胡萝卜",
+              "amount": "1根"
+            },
+            {
+              "name": "青椒",
+              "amount": "1个"
+            },
+            {
+              "name": "泡椒",
+              "amount": "3个"
+            },
+            {
+              "name": "姜末",
+              "amount": "1小块"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1.5汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1.5汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "猪里脊切丝，加盐、料酒、淀粉抓匀腌制15分钟",
+            "木耳泡发切丝，胡萝卜、青椒切丝，泡椒剁碎",
+            "调鱼香汁：生抽、醋、白糖、淀粉、少量水混合搅匀",
+            "锅中倒油烧热，下肉丝滑炒至变色盛出",
+            "锅中留底油，下泡椒碎炒出红油",
+            "加入姜末、蒜末炒香，放入胡萝卜丝、木耳丝翻炒",
+            "放入青椒丝和肉丝翻炒均匀",
+            "倒入调好的鱼香汁快速翻炒",
+            "汤汁浓稠后撒葱花出锅"
+          ]
+        },
+        {
+          "id": "cc06",
+          "name": "夫妻肺片",
+          "ingredients": [
+            {
+              "name": "牛腱子肉",
+              "amount": "200g"
+            },
+            {
+              "name": "牛肚",
+              "amount": "150g"
+            },
+            {
+              "name": "牛舌",
+              "amount": "150g"
+            },
+            {
+              "name": "花生碎",
+              "amount": "30g"
+            },
+            {
+              "name": "熟芝麻",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "芹菜",
+              "amount": "2根"
+            },
+            {
+              "name": "香菜",
+              "amount": "适量"
+            },
+            {
+              "name": "辣椒油",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "花椒粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蒜泥",
+              "amount": "3瓣"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "卤料包",
+              "amount": "1包"
+            }
+          ],
+          "steps": [
+            "牛腱子肉、牛肚、牛舌分别洗净焯水",
+            "卤料包加水煮开，放入三种主料卤制1-2小时至软烂",
+            "捞出晾凉后切成薄片",
+            "芹菜切段焯水垫在盘底",
+            "将切好的肉片整齐码放在芹菜上",
+            "调制红油汁：辣椒油、花椒粉、生抽、醋、蒜泥、白糖搅匀",
+            "将红油汁均匀浇在肉片上",
+            "撒上花生碎、熟芝麻、香菜即可"
+          ]
+        },
+        {
+          "id": "cc07",
+          "name": "辣子鸡",
+          "ingredients": [
+            {
+              "name": "鸡腿肉",
+              "amount": "500g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "50g"
+            },
+            {
+              "name": "花椒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "葱段",
+              "amount": "3根"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "熟芝麻",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "鸡腿肉去骨切小块，加盐、料酒、生抽腌制30分钟",
+            "干辣椒剪成小段去籽",
+            "锅中倒入足量油烧至六成热，下鸡块炸至金黄捞出",
+            "油温升高后复炸一次至外酥里嫩，捞出沥油",
+            "锅中留底油，小火炒香干辣椒段和花椒",
+            "加入姜片、蒜瓣、葱段炒香",
+            "倒入炸好的鸡块大火翻炒",
+            "加白糖提鲜，翻炒均匀",
+            "出锅前撒上熟芝麻即可"
+          ]
+        },
+        {
+          "id": "cc08",
+          "name": "蒜泥白肉",
+          "ingredients": [
+            {
+              "name": "五花肉",
+              "amount": "300g"
+            },
+            {
+              "name": "黄瓜",
+              "amount": "1根"
+            },
+            {
+              "name": "大蒜",
+              "amount": "8瓣"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "辣椒油",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "花椒粉",
+              "amount": "少许"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "五花肉冷水下锅，加姜片、料酒煮至熟透（约25分钟）",
+            "捞出晾凉后切薄片，越薄越好",
+            "黄瓜切丝铺在盘底",
+            "将切好的肉片整齐码放在黄瓜丝上",
+            "大蒜剁成细末（或用蒜臼捣成泥）",
+            "蒜泥加生抽、辣椒油、醋、白糖、花椒粉调成蘸汁",
+            "将蘸汁浇在肉片上或蘸食",
+            "撒上葱花即可"
+          ]
+        },
+        {
+          "id": "cc09",
+          "name": "酸菜鱼",
+          "ingredients": [
+            {
+              "name": "草鱼",
+              "amount": "1条（约750g）"
+            },
+            {
+              "name": "酸菜",
+              "amount": "200g"
+            },
+            {
+              "name": "泡椒",
+              "amount": "5个"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "5个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "蛋清",
+              "amount": "1个"
+            },
+            {
+              "name": "淀粉",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "白胡椒粉",
+              "amount": "少许"
+            },
+            {
+              "name": "白醋",
+              "amount": "1汤匙"
+            }
+          ],
+          "steps": [
+            "草鱼去骨取净肉，斜刀片成鱼片，加盐、料酒、蛋清、淀粉腌制20分钟",
+            "鱼骨剁块备用，酸菜切丝，泡椒切段",
+            "锅中倒油，下姜片、蒜瓣、泡椒炒香",
+            "加入酸菜翻炒2分钟出酸香味",
+            "倒入足量开水，放入鱼骨煮5分钟至汤色变白",
+            "加盐、白胡椒粉、白醋调味",
+            "将锅中料捞出铺在大碗底部",
+            "汤汁煮沸后转小火，滑入鱼片煮至变白",
+            "连汤带鱼倒入碗中",
+            "另起锅烧热油，下干辣椒花椒爆香浇在鱼上"
+          ]
+        },
+        {
+          "id": "cc10",
+          "name": "毛血旺",
+          "ingredients": [
+            {
+              "name": "鸭血",
+              "amount": "200g"
+            },
+            {
+              "name": "午餐肉",
+              "amount": "150g"
+            },
+            {
+              "name": "毛肚",
+              "amount": "150g"
+            },
+            {
+              "name": "黄喉",
+              "amount": "100g"
+            },
+            {
+              "name": "豆芽",
+              "amount": "150g"
+            },
+            {
+              "name": "郫县豆瓣酱",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "15个"
+            },
+            {
+              "name": "花椒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "火锅底料",
+              "amount": "50g"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "葱段",
+              "amount": "3根"
+            }
+          ],
+          "steps": [
+            "鸭血切厚片，午餐肉切片，毛肚洗净切片，黄喉切段",
+            "豆芽焯水铺在大碗底部",
+            "锅中倒油，下豆瓣酱、火锅底料炒出红油",
+            "加入姜片、蒜瓣、葱段炒香",
+            "倒入足量开水煮5分钟，捞出料渣",
+            "放入鸭血、午餐肉煮3分钟",
+            "再放入毛肚、黄喉煮1分钟",
+            "连汤带料倒入碗中",
+            "另起锅烧热油，爆香干辣椒和花椒浇在上面即可"
+          ]
+        },
+        {
+          "id": "cc11",
+          "name": "干煸四季豆",
+          "ingredients": [
+            {
+              "name": "四季豆",
+              "amount": "300g"
+            },
+            {
+              "name": "猪肉末",
+              "amount": "80g"
+            },
+            {
+              "name": "芽菜",
+              "amount": "30g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "5个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "姜末",
+              "amount": "1小块"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "四季豆去筋折段，洗净沥干水分",
+            "锅中倒油烧至六成热，下四季豆炸至表皮起皱捞出",
+            "锅中留底油，下猪肉末煸炒至酥香",
+            "加入芽菜、干辣椒段、花椒、姜蒜末炒香",
+            "倒入炸好的四季豆大火翻炒",
+            "加生抽、盐调味",
+            "炒至四季豆表皮焦香即可出锅"
+          ]
+        },
+        {
+          "id": "cc12",
+          "name": "东坡肘子",
+          "ingredients": [
+            {
+              "name": "猪肘",
+              "amount": "1个（约1kg）"
+            },
+            {
+              "name": "郫县豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "冰糖",
+              "amount": "30g"
+            },
+            {
+              "name": "生抽",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "老抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "葱段",
+              "amount": "3根"
+            },
+            {
+              "name": "八角",
+              "amount": "2个"
+            },
+            {
+              "name": "桂皮",
+              "amount": "1小块"
+            },
+            {
+              "name": "花椒",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "猪肘刮净皮毛，焯水5分钟去血沫",
+            "锅中倒油，下冰糖小火炒至融化呈琥珀色",
+            "放入猪肘，小火翻面上色",
+            "加入豆瓣酱炒出红油",
+            "倒入料酒、生抽、老抽，加入姜片、葱段、八角、桂皮",
+            "加入足量开水没过猪肘",
+            "大火烧开后转小火慢炖2小时",
+            "中途翻面确保入味均匀",
+            "汤汁收浓后加盐调味",
+            "肘子装盘，浇上汤汁即可"
+          ]
+        },
+        {
+          "id": "cc13",
+          "name": "口水鸡",
+          "ingredients": [
+            {
+              "name": "鸡腿",
+              "amount": "3个"
+            },
+            {
+              "name": "花生碎",
+              "amount": "30g"
+            },
+            {
+              "name": "熟芝麻",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "黄瓜",
+              "amount": "1根"
+            },
+            {
+              "name": "辣椒油",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "花椒粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "蒜泥",
+              "amount": "3瓣"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡腿冷水下锅，加姜片、料酒煮15分钟至熟",
+            "捞出放入冰水中冷却（使皮爽肉滑）",
+            "黄瓜切丝铺盘底",
+            "鸡腿斩块码放在黄瓜上",
+            "调红油汁：辣椒油、花椒粉、生抽、醋、白糖、蒜泥搅匀",
+            "将红油汁均匀浇在鸡块上",
+            "撒上花生碎、熟芝麻、葱花即可"
+          ]
+        },
+        {
+          "id": "cc14",
+          "name": "泡椒凤爪",
+          "ingredients": [
+            {
+              "name": "鸡爪",
+              "amount": "500g"
+            },
+            {
+              "name": "泡椒",
+              "amount": "150g"
+            },
+            {
+              "name": "泡椒水",
+              "amount": "200ml"
+            },
+            {
+              "name": "胡萝卜",
+              "amount": "1根"
+            },
+            {
+              "name": "芹菜",
+              "amount": "2根"
+            },
+            {
+              "name": "白醋",
+              "amount": "100ml"
+            },
+            {
+              "name": "白糖",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "花椒",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "凉白开",
+              "amount": "500ml"
+            }
+          ],
+          "steps": [
+            "鸡爪剪去指甲，洗净后从中间劈开",
+            "冷水下锅加姜片、料酒、花椒煮15分钟",
+            "捞出用冰水冲凉，沥干水分",
+            "胡萝卜切条，芹菜切段",
+            "制作泡汁：凉白开加泡椒水、白醋、白糖、盐搅匀",
+            "放入泡椒、姜片",
+            "将鸡爪、胡萝卜条、芹菜段放入泡汁中",
+            "密封后放入冰箱冷藏24小时以上即可食用"
+          ]
+        },
+        {
+          "id": "cc15",
+          "name": "水煮肉片",
+          "ingredients": [
+            {
+              "name": "猪里脊肉",
+              "amount": "300g"
+            },
+            {
+              "name": "生菜",
+              "amount": "200g"
+            },
+            {
+              "name": "豆芽",
+              "amount": "150g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "15个"
+            },
+            {
+              "name": "花椒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "郫县豆瓣酱",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "蛋清",
+              "amount": "1个"
+            },
+            {
+              "name": "淀粉",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "猪里脊切薄片，加盐、料酒、生抽、蛋清、淀粉腌制20分钟",
+            "生菜和豆芽焯水铺在大碗底部",
+            "锅中倒油，下豆瓣酱炒出红油",
+            "加姜片、蒜瓣炒香，倒入足量开水",
+            "加盐调味后转小火，将肉片一片片滑入",
+            "肉片变白即捞出铺在菜上",
+            "将汤汁倒入碗中",
+            "撒上花椒粉、干辣椒段",
+            "另起锅烧热油，浇在上面激出香味"
+          ]
+        },
+        {
+          "id": "cc16",
+          "name": "钵钵鸡",
+          "ingredients": [
+            {
+              "name": "鸡胸肉",
+              "amount": "200g"
+            },
+            {
+              "name": "鸡胗",
+              "amount": "100g"
+            },
+            {
+              "name": "藕片",
+              "amount": "100g"
+            },
+            {
+              "name": "土豆片",
+              "amount": "100g"
+            },
+            {
+              "name": "花菜",
+              "amount": "100g"
+            },
+            {
+              "name": "木耳",
+              "amount": "50g"
+            },
+            {
+              "name": "辣椒油",
+              "amount": "5汤匙"
+            },
+            {
+              "name": "花椒油",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "芝麻酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蒜泥",
+              "amount": "5瓣"
+            },
+            {
+              "name": "熟芝麻",
+              "amount": "2汤匙"
+            }
+          ],
+          "steps": [
+            "鸡胸肉煮熟撕成丝，鸡胗煮熟切片",
+            "各种蔬菜分别焯水至断生",
+            "将所有食材用竹签串成串",
+            "调钵钵鸡汤汁：辣椒油、花椒油、芝麻酱用温水调开",
+            "加入生抽、醋、白糖、蒜泥搅匀",
+            "撒入大量熟芝麻",
+            "将串好的食材放入汤汁中浸泡30分钟以上",
+            "随吃随取，越泡越入味"
+          ]
+        },
+        {
+          "id": "cc17",
+          "name": "担担面",
+          "ingredients": [
+            {
+              "name": "细面条",
+              "amount": "200g"
+            },
+            {
+              "name": "猪肉末",
+              "amount": "100g"
+            },
+            {
+              "name": "芽菜",
+              "amount": "30g"
+            },
+            {
+              "name": "花生碎",
+              "amount": "30g"
+            },
+            {
+              "name": "芝麻酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "辣椒油",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "花椒粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "蒜泥",
+              "amount": "2瓣"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "猪肉末下锅炒干水分，炒至酥香成肉臊子",
+            "芽菜洗净切碎",
+            "调碗底料：芝麻酱用少量温水调开",
+            "加入辣椒油、生抽、醋、花椒粉、蒜泥搅匀",
+            "面条煮熟捞入碗中",
+            "浇上碗底料，放上肉臊子、芽菜",
+            "撒上花生碎、葱花",
+            "吃时拌匀即可"
+          ]
+        },
+        {
+          "id": "cc18",
+          "name": "歌乐山辣子鸡",
+          "ingredients": [
+            {
+              "name": "鸡腿肉",
+              "amount": "500g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "80g"
+            },
+            {
+              "name": "花椒",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "8瓣"
+            },
+            {
+              "name": "葱段",
+              "amount": "3根"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "熟芝麻",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "鸡腿肉切小丁，加盐、料酒、生抽腌制30分钟",
+            "干辣椒剪段去籽",
+            "油温七成热，下鸡丁炸至金黄酥脆捞出",
+            "锅中留底油，小火慢炒干辣椒和花椒至出香味",
+            "加入姜片、蒜瓣、葱段炒香",
+            "倒入炸好的鸡丁大火快炒",
+            "加白糖提鲜",
+            "撒芝麻出锅，辣椒要比鸡多才正宗"
+          ]
+        },
+        {
+          "id": "cc19",
+          "name": "鱼香茄子",
+          "ingredients": [
+            {
+              "name": "茄子",
+              "amount": "2根"
+            },
+            {
+              "name": "猪肉末",
+              "amount": "80g"
+            },
+            {
+              "name": "泡椒",
+              "amount": "3个"
+            },
+            {
+              "name": "姜末",
+              "amount": "1小块"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1.5汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1.5汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "茄子切条，撒少许盐腌10分钟出水后挤干",
+            "茄子裹少许淀粉，油温七成热下锅炸至金黄捞出",
+            "调鱼香汁：生抽、醋、白糖、淀粉、水混合",
+            "锅中留底油，下猪肉末炒香",
+            "加泡椒碎、姜蒜末炒出红油",
+            "倒入炸好的茄子翻炒",
+            "淋入鱼香汁大火收汁",
+            "汤汁浓稠后撒葱花出锅"
+          ]
+        },
+        {
+          "id": "cc20",
+          "name": "重庆火锅",
+          "ingredients": [
+            {
+              "name": "牛油火锅底料",
+              "amount": "200g"
+            },
+            {
+              "name": "郫县豆瓣酱",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "30个"
+            },
+            {
+              "name": "花椒",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "10片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "10瓣"
+            },
+            {
+              "name": "葱段",
+              "amount": "5根"
+            },
+            {
+              "name": "冰糖",
+              "amount": "20g"
+            },
+            {
+              "name": "料酒",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "醪糟",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "毛肚",
+              "amount": "200g"
+            },
+            {
+              "name": "鹅肠",
+              "amount": "150g"
+            },
+            {
+              "name": "牛肉片",
+              "amount": "200g"
+            },
+            {
+              "name": "各种蔬菜",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "锅中放入牛油底料小火融化",
+            "加入豆瓣酱炒出红油",
+            "放入干辣椒、花椒、姜片、蒜瓣、葱段炒香",
+            "倒入足量开水，加冰糖、料酒、醪糟",
+            "大火烧开转小火熬制30分钟出味",
+            "准备蘸料：蒜泥+香油+蚝油+醋+葱花+香菜",
+            "毛肚七上八下涮15秒即可",
+            "鹅肠涮10秒卷起即食",
+            "牛肉片变色即食，越薄越好"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ganguo",
+      "name": "干锅",
+      "icon": "🍲",
+      "dishes": [
+        {
+          "id": "gg01",
+          "name": "干锅牛蛙",
+          "ingredients": [
+            {
+              "name": "牛蛙",
+              "amount": "3只"
+            },
+            {
+              "name": "藕片",
+              "amount": "100g"
+            },
+            {
+              "name": "土豆片",
+              "amount": "100g"
+            },
+            {
+              "name": "洋葱",
+              "amount": "半个"
+            },
+            {
+              "name": "青红椒",
+              "amount": "各1个"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "10个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "郫县豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "火锅底料",
+              "amount": "30g"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "孜然粉",
+              "amount": "1茶匙"
+            }
+          ],
+          "steps": [
+            "牛蛙宰杀洗净剁块，加料酒、盐腌制15分钟",
+            "藕片、土豆片焯水备用",
+            "牛蛙裹少许淀粉，油温六成热下锅炸至金黄捞出",
+            "锅中留底油，下豆瓣酱和火锅底料炒出红油",
+            "加入干辣椒、花椒、姜蒜炒香",
+            "放入牛蛙、藕片、土豆片翻炒",
+            "加生抽、孜然粉调味",
+            "最后放入青红椒和洋葱翻炒",
+            "出锅装盘，底部可加热保温食用"
+          ]
+        },
+        {
+          "id": "gg02",
+          "name": "干锅花菜",
+          "ingredients": [
+            {
+              "name": "有机花菜",
+              "amount": "1颗"
+            },
+            {
+              "name": "五花肉",
+              "amount": "100g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "6个"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "花菜掰成小朵，淡盐水浸泡15分钟洗净",
+            "五花肉切薄片",
+            "锅中倒少许油，下五花肉煸炒出油至微焦",
+            "加入豆瓣酱炒出红油",
+            "放入干辣椒、姜片、蒜瓣炒香",
+            "倒入花菜大火翻炒",
+            "加生抽、蚝油调味",
+            "炒至花菜边缘微焦，口感脆嫩即可出锅"
+          ]
+        },
+        {
+          "id": "gg03",
+          "name": "干锅肥肠",
+          "ingredients": [
+            {
+              "name": "猪大肠",
+              "amount": "500g"
+            },
+            {
+              "name": "洋葱",
+              "amount": "半个"
+            },
+            {
+              "name": "青椒",
+              "amount": "2个"
+            },
+            {
+              "name": "红椒",
+              "amount": "1个"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "10个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "郫县豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "料酒",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白醋",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "面粉",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "猪大肠用面粉和白醋反复搓洗去异味，里外翻洗干净",
+            "冷水下锅加料酒、姜片焯水10分钟",
+            "捞出切段，高压锅压15分钟至软烂",
+            "锅中倒油，油温七成热下肥肠炸至表面金黄",
+            "锅中留底油，下豆瓣酱炒出红油",
+            "加入干辣椒、花椒、姜蒜炒香",
+            "放入肥肠大火翻炒",
+            "加生抽调味，最后放入洋葱和青红椒",
+            "炒匀后装干锅，底部加热上桌"
+          ]
+        },
+        {
+          "id": "gg04",
+          "name": "干锅土豆片",
+          "ingredients": [
+            {
+              "name": "土豆",
+              "amount": "3个"
+            },
+            {
+              "name": "五花肉",
+              "amount": "80g"
+            },
+            {
+              "name": "洋葱",
+              "amount": "半个"
+            },
+            {
+              "name": "青红椒",
+              "amount": "各1个"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "5个"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "孜然粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "辣椒粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蒜片",
+              "amount": "3瓣"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "土豆去皮切厚片，清水浸泡去淀粉",
+            "沥干后油温六成热下锅炸至金黄",
+            "五花肉切薄片煸炒出油",
+            "加豆瓣酱炒出红油",
+            "放入干辣椒、蒜片炒香",
+            "倒入土豆片大火翻炒",
+            "加孜然粉、辣椒粉、生抽调味",
+            "最后加洋葱、青红椒翻炒出锅"
+          ]
+        },
+        {
+          "id": "gg05",
+          "name": "干锅虾",
+          "ingredients": [
+            {
+              "name": "大虾",
+              "amount": "400g"
+            },
+            {
+              "name": "藕片",
+              "amount": "100g"
+            },
+            {
+              "name": "土豆条",
+              "amount": "100g"
+            },
+            {
+              "name": "芹菜",
+              "amount": "2根"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "10个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "火锅底料",
+              "amount": "20g"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "孜然粉",
+              "amount": "1茶匙"
+            }
+          ],
+          "steps": [
+            "大虾剪去虾须虾枪，开背去虾线",
+            "加料酒腌制10分钟",
+            "藕片和土豆条焯水备用",
+            "虾裹薄淀粉，油温六成热炸至外壳酥脆",
+            "锅中留底油，下豆瓣酱和火锅底料炒出红油",
+            "加干辣椒、花椒、姜蒜炒香",
+            "放入虾、藕片、土豆条翻炒",
+            "加孜然粉调味",
+            "最后放入芹菜段翻炒出锅"
+          ]
+        },
+        {
+          "id": "gg06",
+          "name": "干锅排骨",
+          "ingredients": [
+            {
+              "name": "猪排骨",
+              "amount": "500g"
+            },
+            {
+              "name": "洋葱",
+              "amount": "半个"
+            },
+            {
+              "name": "青红椒",
+              "amount": "各1个"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "10个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "孜然粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "熟芝麻",
+              "amount": "1汤匙"
+            }
+          ],
+          "steps": [
+            "排骨剁小块，冷水下锅加料酒焯水",
+            "捞出后加姜片、料酒入高压锅压15分钟",
+            "排骨沥干，油温七成热下锅炸至表面金黄",
+            "锅中留底油，下豆瓣酱炒出红油",
+            "加干辣椒、花椒、姜蒜炒香",
+            "放入排骨大火翻炒",
+            "加生抽、孜然粉调味",
+            "放入洋葱、青红椒翻炒",
+            "撒熟芝麻出锅"
+          ]
+        },
+        {
+          "id": "gg07",
+          "name": "干锅鱿鱼须",
+          "ingredients": [
+            {
+              "name": "鱿鱼须",
+              "amount": "400g"
+            },
+            {
+              "name": "洋葱",
+              "amount": "半个"
+            },
+            {
+              "name": "芹菜",
+              "amount": "2根"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "10个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜丝",
+              "amount": "适量"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "孜然粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "辣椒粉",
+              "amount": "1茶匙"
+            }
+          ],
+          "steps": [
+            "鱿鱼须洗净切段，加料酒腌制10分钟",
+            "开水焯烫30秒立即捞出",
+            "锅中倒油，油温七成热下鱿鱼须快速过油10秒捞出",
+            "锅中留底油，下豆瓣酱炒出红油",
+            "加干辣椒、花椒、姜蒜炒香",
+            "放入鱿鱼须大火快炒",
+            "加孜然粉、辣椒粉调味",
+            "放入洋葱、芹菜翻炒",
+            "出锅要快，保持鱿鱼嫩滑"
+          ]
+        },
+        {
+          "id": "gg08",
+          "name": "干锅千叶豆腐",
+          "ingredients": [
+            {
+              "name": "千叶豆腐",
+              "amount": "1盒"
+            },
+            {
+              "name": "五花肉",
+              "amount": "80g"
+            },
+            {
+              "name": "青红椒",
+              "amount": "各1个"
+            },
+            {
+              "name": "洋葱",
+              "amount": "半个"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "5个"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蒜片",
+              "amount": "3瓣"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "千叶豆腐切厚片",
+            "五花肉切薄片",
+            "锅中倒油，下千叶豆腐煎至两面金黄盛出",
+            "下五花肉煸炒出油",
+            "加豆瓣酱炒出红油",
+            "放入干辣椒、蒜片炒香",
+            "倒入千叶豆腐、青红椒、洋葱翻炒",
+            "加蚝油、生抽调味",
+            "炒匀即可出锅"
+          ]
+        },
+        {
+          "id": "gg09",
+          "name": "干锅包菜",
+          "ingredients": [
+            {
+              "name": "包菜",
+              "amount": "半颗"
+            },
+            {
+              "name": "五花肉",
+              "amount": "80g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "5个"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "3瓣"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "包菜手撕成片（不要用刀切，手撕更好吃）",
+            "五花肉切薄片",
+            "锅中不放油，下五花肉煸出油",
+            "五花肉微焦时加干辣椒和蒜瓣炒香",
+            "放入包菜大火爆炒",
+            "加蚝油、生抽调味",
+            "沿锅边淋入少许醋提香",
+            "炒至包菜断生即可，保持脆爽口感"
+          ]
+        },
+        {
+          "id": "gg10",
+          "name": "干锅鸡",
+          "ingredients": [
+            {
+              "name": "三黄鸡",
+              "amount": "半只"
+            },
+            {
+              "name": "藕片",
+              "amount": "100g"
+            },
+            {
+              "name": "土豆条",
+              "amount": "100g"
+            },
+            {
+              "name": "洋葱",
+              "amount": "半个"
+            },
+            {
+              "name": "青红椒",
+              "amount": "各1个"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "15个"
+            },
+            {
+              "name": "花椒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "8瓣"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "孜然粉",
+              "amount": "1茶匙"
+            }
+          ],
+          "steps": [
+            "鸡剁小块，加料酒、姜片腌制20分钟",
+            "鸡块裹薄淀粉，油温六成热炸至金黄",
+            "藕片、土豆条焯水",
+            "锅中留底油，下豆瓣酱炒出红油",
+            "加干辣椒、花椒、姜蒜炒香",
+            "放入鸡块大火翻炒",
+            "加生抽、孜然粉调味",
+            "放入藕片、土豆条、洋葱、青红椒",
+            "翻炒均匀后装干锅，底部点酒精灯保温"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kidfood",
+      "name": "小孩菜",
+      "icon": "👶",
+      "dishes": [
+        {
+          "id": "kf01",
+          "name": "番茄炒蛋",
+          "ingredients": [
+            {
+              "name": "鸡蛋",
+              "amount": "3个"
+            },
+            {
+              "name": "番茄",
+              "amount": "2个"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡蛋打散加少许盐搅匀",
+            "番茄切小块",
+            "锅中倒油烧热，倒入蛋液炒至凝固盛出",
+            "锅中再倒少许油，放入番茄块翻炒出汁",
+            "加白糖中和酸味",
+            "倒入炒好的鸡蛋翻炒均匀",
+            "加盐调味，撒葱花出锅"
+          ]
+        },
+        {
+          "id": "kf02",
+          "name": "可乐鸡翅",
+          "ingredients": [
+            {
+              "name": "鸡中翅",
+              "amount": "10个"
+            },
+            {
+              "name": "可乐",
+              "amount": "1罐"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "老抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡翅洗净两面各划两刀方便入味",
+            "冷水下锅加料酒焯水去腥",
+            "锅中倒少许油，下鸡翅煎至两面金黄",
+            "加入姜片，倒入可乐没过鸡翅",
+            "加生抽、老抽上色",
+            "大火烧开转中小火煮15分钟",
+            "开大火收汁至浓稠挂在鸡翅上即可"
+          ]
+        },
+        {
+          "id": "kf03",
+          "name": "清蒸鲈鱼",
+          "ingredients": [
+            {
+              "name": "鲈鱼",
+              "amount": "1条"
+            },
+            {
+              "name": "葱丝",
+              "amount": "2根"
+            },
+            {
+              "name": "姜丝",
+              "amount": "1小块"
+            },
+            {
+              "name": "蒸鱼豉油",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鲈鱼处理干净，两面划几刀",
+            "鱼身抹盐和料酒腌制10分钟",
+            "盘底铺姜片，鱼身上放姜丝",
+            "蒸锅水开后放入鱼，大火蒸8-10分钟",
+            "蒸好后倒掉盘中汤汁",
+            "鱼身上放葱丝",
+            "锅中烧热油浇在葱丝上",
+            "淋上蒸鱼豉油即可"
+          ]
+        },
+        {
+          "id": "kf04",
+          "name": "土豆炖牛肉",
+          "ingredients": [
+            {
+              "name": "牛腩",
+              "amount": "300g"
+            },
+            {
+              "name": "土豆",
+              "amount": "2个"
+            },
+            {
+              "name": "胡萝卜",
+              "amount": "1根"
+            },
+            {
+              "name": "洋葱",
+              "amount": "半个"
+            },
+            {
+              "name": "番茄",
+              "amount": "1个"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "八角",
+              "amount": "1个"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "牛腩切块焯水去血沫",
+            "土豆、胡萝卜切滚刀块，番茄切块",
+            "锅中倒油，下洋葱炒香，放番茄炒出汁",
+            "放入牛腩翻炒，加料酒、生抽",
+            "加足量热水、姜片、八角",
+            "大火烧开转小火炖1小时",
+            "加入土豆和胡萝卜继续炖20分钟",
+            "加盐调味，收汁至浓稠即可"
+          ]
+        },
+        {
+          "id": "kf05",
+          "name": "糖醋里脊",
+          "ingredients": [
+            {
+              "name": "猪里脊肉",
+              "amount": "300g"
+            },
+            {
+              "name": "鸡蛋",
+              "amount": "1个"
+            },
+            {
+              "name": "淀粉",
+              "amount": "适量"
+            },
+            {
+              "name": "番茄酱",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "白醋",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "里脊肉切条，加盐、料酒腌制15分钟",
+            "鸡蛋打散加淀粉调成糊状",
+            "肉条裹上蛋糊",
+            "油温六成热，逐条下锅炸至金黄捞出",
+            "油温升高后复炸一次至酥脆",
+            "调糖醋汁：番茄酱、白醋、白糖、少量水搅匀",
+            "锅中倒少许油，倒入糖醋汁煮至冒泡",
+            "放入炸好的里脊快速翻炒均匀即可"
+          ]
+        },
+        {
+          "id": "kf06",
+          "name": "虾仁蒸蛋",
+          "ingredients": [
+            {
+              "name": "鸡蛋",
+              "amount": "3个"
+            },
+            {
+              "name": "虾仁",
+              "amount": "100g"
+            },
+            {
+              "name": "温水",
+              "amount": "约鸡蛋液的1.5倍"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "香油",
+              "amount": "几滴"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡蛋打散加盐搅匀",
+            "加入温水搅匀（温水蒸出来更嫩）",
+            "用滤网过滤蛋液去除泡沫",
+            "虾仁加少许料酒腌制",
+            "蛋液盖上保鲜膜，扎几个小孔",
+            "蒸锅水开后放入，中小火蒸8分钟",
+            "蛋液凝固后摆上虾仁",
+            "继续蒸3分钟至虾仁变色",
+            "淋生抽和香油，撒葱花即可"
+          ]
+        },
+        {
+          "id": "kf07",
+          "name": "红烧鸡腿",
+          "ingredients": [
+            {
+              "name": "鸡腿",
+              "amount": "4个"
+            },
+            {
+              "name": "冰糖",
+              "amount": "20g"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "老抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "八角",
+              "amount": "1个"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡腿洗净划几刀方便入味",
+            "冷水下锅加料酒焯水",
+            "锅中倒少许油，下冰糖小火炒出糖色",
+            "放入鸡腿翻面上色",
+            "加入姜片、八角",
+            "倒入料酒、生抽、老抽",
+            "加开水没过鸡腿",
+            "大火烧开转中小火炖20分钟",
+            "大火收汁至浓稠即可"
+          ]
+        },
+        {
+          "id": "kf08",
+          "name": "玉米排骨汤",
+          "ingredients": [
+            {
+              "name": "排骨",
+              "amount": "300g"
+            },
+            {
+              "name": "甜玉米",
+              "amount": "2根"
+            },
+            {
+              "name": "胡萝卜",
+              "amount": "1根"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "排骨冷水下锅加料酒焯水",
+            "玉米切段，胡萝卜切滚刀块",
+            "排骨放入锅中加足量热水",
+            "加姜片大火烧开转小火炖40分钟",
+            "加入玉米和胡萝卜继续炖20分钟",
+            "加盐调味",
+            "撒葱花即可"
+          ]
+        },
+        {
+          "id": "kf09",
+          "name": "西兰花炒虾仁",
+          "ingredients": [
+            {
+              "name": "西兰花",
+              "amount": "1颗"
+            },
+            {
+              "name": "虾仁",
+              "amount": "150g"
+            },
+            {
+              "name": "蒜末",
+              "amount": "2瓣"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "料酒",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "少许"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "西兰花掰小朵，淡盐水浸泡15分钟",
+            "虾仁加料酒、淀粉腌制",
+            "西兰花焯水1分钟捞出",
+            "锅中倒油，下蒜末爆香",
+            "放入虾仁炒至变色",
+            "加入西兰花翻炒",
+            "加盐调味，快速翻炒出锅"
+          ]
+        },
+        {
+          "id": "kf10",
+          "name": "肉末蒸豆腐",
+          "ingredients": [
+            {
+              "name": "嫩豆腐",
+              "amount": "1盒"
+            },
+            {
+              "name": "猪肉末",
+              "amount": "100g"
+            },
+            {
+              "name": "香菇",
+              "amount": "3朵"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "豆腐切厚片码在盘中",
+            "香菇泡发切碎",
+            "肉末加生抽、蚝油、淀粉拌匀",
+            "加入香菇碎拌匀",
+            "将肉末均匀铺在豆腐上",
+            "蒸锅水开后放入，大火蒸10分钟",
+            "出锅撒葱花",
+            "锅中烧少许热油浇在上面即可"
+          ]
+        },
+        {
+          "id": "kf11",
+          "name": "南瓜小米粥",
+          "ingredients": [
+            {
+              "name": "小米",
+              "amount": "100g"
+            },
+            {
+              "name": "南瓜",
+              "amount": "200g"
+            },
+            {
+              "name": "清水",
+              "amount": "适量"
+            },
+            {
+              "name": "枸杞",
+              "amount": "少许"
+            }
+          ],
+          "steps": [
+            "小米洗净浸泡30分钟",
+            "南瓜去皮切小块",
+            "锅中加水烧开，放入小米",
+            "大火煮开后转小火熬15分钟",
+            "放入南瓜块继续熬15分钟",
+            "期间不断搅拌防止粘锅",
+            "熬至粥粘稠南瓜软烂",
+            "撒几粒枸杞即可"
+          ]
+        },
+        {
+          "id": "kf12",
+          "name": "鸡蛋炒饭",
+          "ingredients": [
+            {
+              "name": "隔夜米饭",
+              "amount": "1碗"
+            },
+            {
+              "name": "鸡蛋",
+              "amount": "2个"
+            },
+            {
+              "name": "火腿肠",
+              "amount": "1根"
+            },
+            {
+              "name": "青豆",
+              "amount": "30g"
+            },
+            {
+              "name": "玉米粒",
+              "amount": "30g"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡蛋打散，火腿肠切丁",
+            "青豆和玉米粒焯水",
+            "锅中倒油，倒入蛋液快速炒散盛出",
+            "锅中再倒油，放入米饭炒散",
+            "加入火腿丁、青豆、玉米粒翻炒",
+            "放入炒好的鸡蛋",
+            "加盐调味，撒葱花出锅"
+          ]
+        },
+        {
+          "id": "kf13",
+          "name": "照烧鸡排",
+          "ingredients": [
+            {
+              "name": "鸡胸肉",
+              "amount": "2块"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "蜂蜜",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡胸肉用刀背拍松，厚度均匀",
+            "生抽、蜂蜜、料酒、蚝油、姜片调成照烧汁",
+            "鸡肉放入照烧汁腌制30分钟",
+            "锅中倒少许油，中小火煎鸡肉",
+            "每面煎3-4分钟至金黄",
+            "倒入剩余照烧汁",
+            "小火收汁至浓稠挂在鸡肉上",
+            "切片装盘"
+          ]
+        },
+        {
+          "id": "kf14",
+          "name": "奶香土豆泥",
+          "ingredients": [
+            {
+              "name": "土豆",
+              "amount": "3个"
+            },
+            {
+              "name": "牛奶",
+              "amount": "50ml"
+            },
+            {
+              "name": "黄油",
+              "amount": "15g"
+            },
+            {
+              "name": "盐",
+              "amount": "少许"
+            },
+            {
+              "name": "黑胡椒粉",
+              "amount": "少许"
+            }
+          ],
+          "steps": [
+            "土豆去皮切块，蒸20分钟至软烂",
+            "趁热用勺子压成泥",
+            "加入黄油搅拌至融化",
+            "少量多次加入牛奶搅拌至顺滑",
+            "加盐和黑胡椒粉调味",
+            "搅拌至绵密顺滑即可"
+          ]
+        },
+        {
+          "id": "kf15",
+          "name": "清炒时蔬",
+          "ingredients": [
+            {
+              "name": "各种时令蔬菜",
+              "amount": "适量"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "蔬菜洗净切好",
+            "锅中烧开水加少许油和盐",
+            "蔬菜焯水30秒捞出（保持翠绿）",
+            "锅中倒油，下蒜末爆香",
+            "放入蔬菜大火快炒",
+            "加盐和蚝油调味",
+            "翻炒均匀立即出锅"
+          ]
+        },
+        {
+          "id": "kf16",
+          "name": "香菇滑鸡",
+          "ingredients": [
+            {
+              "name": "鸡腿肉",
+              "amount": "300g"
+            },
+            {
+              "name": "干香菇",
+              "amount": "8朵"
+            },
+            {
+              "name": "姜丝",
+              "amount": "适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡腿肉去骨切块",
+            "干香菇泡发切片",
+            "鸡肉加生抽、蚝油、淀粉、料酒腌制20分钟",
+            "锅中倒油，下姜丝爆香",
+            "放入鸡肉滑炒至变色",
+            "加入香菇片翻炒",
+            "加少量水焖3分钟",
+            "大火收汁即可"
+          ]
+        },
+        {
+          "id": "kf17",
+          "name": "鱼丸汤",
+          "ingredients": [
+            {
+              "name": "鱼丸",
+              "amount": "200g"
+            },
+            {
+              "name": "紫菜",
+              "amount": "少许"
+            },
+            {
+              "name": "虾皮",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "香油",
+              "amount": "几滴"
+            },
+            {
+              "name": "白胡椒粉",
+              "amount": "少许"
+            }
+          ],
+          "steps": [
+            "锅中加水烧开",
+            "放入鱼丸煮至浮起",
+            "加入虾皮煮1分钟",
+            "放入撕碎的紫菜",
+            "加盐、白胡椒粉调味",
+            "关火后淋几滴香油",
+            "撒葱花即可"
+          ]
+        },
+        {
+          "id": "kf18",
+          "name": "蜜汁烤翅",
+          "ingredients": [
+            {
+              "name": "鸡中翅",
+              "amount": "10个"
+            },
+            {
+              "name": "蜂蜜",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "黑胡椒粉",
+              "amount": "少许"
+            }
+          ],
+          "steps": [
+            "鸡翅洗净划刀",
+            "蜂蜜、生抽、蚝油、料酒、蒜末、姜片、黑胡椒粉调成腌料",
+            "鸡翅放入腌料中腌制至少2小时（隔夜更佳）",
+            "烤箱预热200度",
+            "烤盘铺锡纸，摆上鸡翅",
+            "烤15分钟后取出刷一层腌料",
+            "再烤10分钟至表面焦黄即可"
+          ]
+        },
+        {
+          "id": "kf19",
+          "name": "三色蒸蛋",
+          "ingredients": [
+            {
+              "name": "鸡蛋",
+              "amount": "3个"
+            },
+            {
+              "name": "皮蛋",
+              "amount": "1个"
+            },
+            {
+              "name": "咸鸭蛋",
+              "amount": "1个"
+            },
+            {
+              "name": "盐",
+              "amount": "少许"
+            },
+            {
+              "name": "香油",
+              "amount": "几滴"
+            }
+          ],
+          "steps": [
+            "皮蛋和咸鸭蛋切小块铺在碗底",
+            "鸡蛋打散加少许盐搅匀",
+            "蛋液过滤后倒入碗中",
+            "盖上保鲜膜扎孔",
+            "蒸锅水开后中小火蒸12分钟",
+            "取出晾凉后倒扣切块",
+            "淋上香油即可"
+          ]
+        },
+        {
+          "id": "kf20",
+          "name": "水果沙拉",
+          "ingredients": [
+            {
+              "name": "苹果",
+              "amount": "1个"
+            },
+            {
+              "name": "香蕉",
+              "amount": "1根"
+            },
+            {
+              "name": "草莓",
+              "amount": "5颗"
+            },
+            {
+              "name": "蓝莓",
+              "amount": "适量"
+            },
+            {
+              "name": "酸奶",
+              "amount": "1盒"
+            },
+            {
+              "name": "蜂蜜",
+              "amount": "1汤匙"
+            }
+          ],
+          "steps": [
+            "所有水果洗净",
+            "苹果去皮切丁，香蕉切片，草莓切半",
+            "所有水果放入大碗中",
+            "酸奶加蜂蜜搅匀",
+            "将酸奶淋在水果上",
+            "轻轻拌匀即可食用"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "manhan",
+      "name": "满汉全席",
+      "icon": "👑",
+      "dishes": [
+        {
+          "id": "mh01",
+          "name": "红烧肉",
+          "ingredients": [
+            {
+              "name": "五花肉",
+              "amount": "500g"
+            },
+            {
+              "name": "冰糖",
+              "amount": "30g"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "老抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "葱段",
+              "amount": "3根"
+            },
+            {
+              "name": "八角",
+              "amount": "2个"
+            },
+            {
+              "name": "桂皮",
+              "amount": "1小块"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "五花肉切3cm方块，冷水下锅焯水",
+            "锅中放少许油，下冰糖小火炒至融化冒泡呈琥珀色",
+            "放入五花肉翻炒上色",
+            "加入姜片、葱段、八角、桂皮炒香",
+            "倒入料酒、生抽、老抽",
+            "加入足量开水没过肉",
+            "大火烧开转小火慢炖1小时",
+            "开大火收汁至浓稠红亮即可"
+          ]
+        },
+        {
+          "id": "mh02",
+          "name": "糖醋排骨",
+          "ingredients": [
+            {
+              "name": "猪小排",
+              "amount": "500g"
+            },
+            {
+              "name": "冰糖",
+              "amount": "30g"
+            },
+            {
+              "name": "醋",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "老抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "熟芝麻",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "排骨剁小段，冷水下锅焯水",
+            "锅中倒油，下冰糖小火炒出糖色",
+            "放入排骨翻炒上色",
+            "加入姜片、料酒、生抽、老抽",
+            "加入开水没过排骨",
+            "中小火炖30分钟",
+            "汤汁减少后加入醋",
+            "大火收汁至浓稠",
+            "撒熟芝麻出锅"
+          ]
+        },
+        {
+          "id": "mh03",
+          "name": "鱼香肉丝",
+          "ingredients": [
+            {
+              "name": "猪里脊肉",
+              "amount": "250g"
+            },
+            {
+              "name": "木耳",
+              "amount": "50g"
+            },
+            {
+              "name": "胡萝卜",
+              "amount": "1根"
+            },
+            {
+              "name": "青椒",
+              "amount": "1个"
+            },
+            {
+              "name": "泡椒",
+              "amount": "3个"
+            },
+            {
+              "name": "姜末",
+              "amount": "1小块"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1.5汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1.5汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            }
+          ],
+          "steps": [
+            "里脊肉切丝，加盐、料酒、淀粉腌制",
+            "木耳、胡萝卜、青椒切丝",
+            "调鱼香汁：生抽、醋、白糖、淀粉、水搅匀",
+            "锅中倒油滑炒肉丝变色盛出",
+            "下泡椒碎炒出红油，加姜蒜炒香",
+            "放入蔬菜丝翻炒",
+            "放入肉丝，淋入鱼香汁快速翻炒",
+            "汤汁浓稠撒葱花出锅"
+          ]
+        },
+        {
+          "id": "mh04",
+          "name": "酸辣土豆丝",
+          "ingredients": [
+            {
+              "name": "土豆",
+              "amount": "2个"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "3个"
+            },
+            {
+              "name": "花椒",
+              "amount": "少许"
+            },
+            {
+              "name": "白醋",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "蒜片",
+              "amount": "2瓣"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "土豆去皮切细丝，清水浸泡去淀粉",
+            "换水清洗2-3遍至水清",
+            "锅中倒油，下花椒小火炸香后捞出",
+            "放入干辣椒段和蒜片爆香",
+            "土豆丝沥干下锅大火快炒",
+            "沿锅边淋入白醋",
+            "加盐调味",
+            "全程大火翻炒不超过2分钟，保持脆爽"
+          ]
+        },
+        {
+          "id": "mh05",
+          "name": "干煸豆角",
+          "ingredients": [
+            {
+              "name": "豆角",
+              "amount": "300g"
+            },
+            {
+              "name": "猪肉末",
+              "amount": "80g"
+            },
+            {
+              "name": "芽菜",
+              "amount": "30g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "5个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "姜蒜末",
+              "amount": "各适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "豆角去筋折段，洗净沥干",
+            "油温六成热下豆角炸至表皮起皱",
+            "捞出沥油",
+            "锅中留底油，下肉末煸炒至酥",
+            "加芽菜、干辣椒、花椒、姜蒜炒香",
+            "放入豆角大火翻炒",
+            "加生抽、盐调味出锅"
+          ]
+        },
+        {
+          "id": "mh06",
+          "name": "地三鲜",
+          "ingredients": [
+            {
+              "name": "土豆",
+              "amount": "1个"
+            },
+            {
+              "name": "茄子",
+              "amount": "1个"
+            },
+            {
+              "name": "青椒",
+              "amount": "2个"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "土豆、茄子、青椒切滚刀块",
+            "茄子撒盐出水后裹淀粉",
+            "分别将土豆、茄子炸至金黄",
+            "青椒过油10秒",
+            "调碗汁：生抽、蚝油、淀粉、水搅匀",
+            "锅中留底油，下蒜末爆香",
+            "放入所有蔬菜，淋入碗汁",
+            "大火翻炒均匀即可"
+          ]
+        },
+        {
+          "id": "mh07",
+          "name": "西红柿牛腩",
+          "ingredients": [
+            {
+              "name": "牛腩",
+              "amount": "400g"
+            },
+            {
+              "name": "番茄",
+              "amount": "3个"
+            },
+            {
+              "name": "洋葱",
+              "amount": "半个"
+            },
+            {
+              "name": "番茄酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            }
+          ],
+          "steps": [
+            "牛腩切块焯水",
+            "番茄去皮切块，洋葱切丝",
+            "锅中倒油，下洋葱炒香",
+            "放入番茄块炒出汁",
+            "加入番茄酱炒出红油",
+            "放入牛腩、姜片、料酒、生抽",
+            "加足量热水炖1.5小时",
+            "加盐和白糖调味",
+            "汤汁浓稠即可"
+          ]
+        },
+        {
+          "id": "mh08",
+          "name": "宫保鸡丁",
+          "ingredients": [
+            {
+              "name": "鸡胸肉",
+              "amount": "300g"
+            },
+            {
+              "name": "花生米",
+              "amount": "50g"
+            },
+            {
+              "name": "黄瓜",
+              "amount": "半根"
+            },
+            {
+              "name": "胡萝卜",
+              "amount": "半根"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "6个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "葱姜蒜",
+              "amount": "各适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            }
+          ],
+          "steps": [
+            "鸡胸肉切丁加盐、料酒、淀粉腌制",
+            "花生米小火炒至酥脆",
+            "调碗汁：生抽、醋、白糖、淀粉、水",
+            "锅中倒油滑炒鸡丁盛出",
+            "下干辣椒、花椒小火炒香",
+            "加姜蒜葱爆香",
+            "放入蔬菜丁和鸡丁翻炒",
+            "淋入碗汁快速翻匀",
+            "加花生米出锅"
+          ]
+        },
+        {
+          "id": "mh09",
+          "name": "京酱肉丝",
+          "ingredients": [
+            {
+              "name": "猪里脊肉",
+              "amount": "300g"
+            },
+            {
+              "name": "甜面酱",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "大葱",
+              "amount": "2根（取葱白）"
+            },
+            {
+              "name": "豆腐皮",
+              "amount": "适量"
+            },
+            {
+              "name": "黄瓜",
+              "amount": "1根"
+            }
+          ],
+          "steps": [
+            "里脊肉切细丝，加料酒、淀粉、少许盐腌制",
+            "大葱白切细丝，黄瓜切丝",
+            "豆腐皮切方块",
+            "锅中倒油，下肉丝滑炒变色盛出",
+            "锅中留底油，下甜面酱小火炒香",
+            "加白糖和少量水调开",
+            "放入肉丝翻炒均匀裹上酱汁",
+            "盘中葱丝垫底，放上肉丝",
+            "配豆腐皮、黄瓜丝卷着吃"
+          ]
+        },
+        {
+          "id": "mh10",
+          "name": "木须肉",
+          "ingredients": [
+            {
+              "name": "猪里脊肉",
+              "amount": "150g"
+            },
+            {
+              "name": "鸡蛋",
+              "amount": "2个"
+            },
+            {
+              "name": "木耳",
+              "amount": "50g"
+            },
+            {
+              "name": "黄花菜",
+              "amount": "30g"
+            },
+            {
+              "name": "黄瓜",
+              "amount": "半根"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "姜末",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "里脊肉切片，加料酒、淀粉腌制",
+            "鸡蛋打散炒熟盛出",
+            "木耳、黄花菜泡发洗净",
+            "黄瓜切片",
+            "锅中倒油，下肉片滑炒变色",
+            "加入姜末、木耳、黄花菜翻炒",
+            "放入鸡蛋和黄瓜片",
+            "加生抽、盐调味翻炒出锅"
+          ]
+        },
+        {
+          "id": "mh11",
+          "name": "回锅肉",
+          "ingredients": [
+            {
+              "name": "五花肉",
+              "amount": "300g"
+            },
+            {
+              "name": "青蒜",
+              "amount": "3根"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "甜面酱",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "豆豉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            }
+          ],
+          "steps": [
+            "五花肉整块冷水下锅加料酒、姜片煮20分钟",
+            "捞出晾凉切薄片",
+            "青蒜斜刀切段",
+            "锅中不放油，下肉片煸炒出油卷曲",
+            "肉拨一边，用锅中油炒豆瓣酱出红油",
+            "加豆豉、甜面酱炒匀",
+            "放青蒜翻炒至断生",
+            "加白糖提鲜出锅"
+          ]
+        },
+        {
+          "id": "mh12",
+          "name": "锅包肉",
+          "ingredients": [
+            {
+              "name": "猪里脊肉",
+              "amount": "300g"
+            },
+            {
+              "name": "土豆淀粉",
+              "amount": "150g"
+            },
+            {
+              "name": "白醋",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "胡萝卜丝",
+              "amount": "适量"
+            },
+            {
+              "name": "姜丝",
+              "amount": "适量"
+            },
+            {
+              "name": "葱丝",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "里脊肉切大片，用刀背拍松",
+            "土豆淀粉加水调成糊状静置30分钟",
+            "倒掉上层清水，用沉淀的湿淀粉裹肉",
+            "油温六成热，逐片下锅炸至定型捞出",
+            "油温升高后复炸至金黄酥脆",
+            "白醋、白糖、生抽调成糖醋汁",
+            "锅中倒少许油，下糖醋汁熬至粘稠",
+            "放入肉片和蔬菜丝快速翻炒",
+            "每片都裹上汁即可出锅"
+          ]
+        },
+        {
+          "id": "mh13",
+          "name": "麻婆豆腐",
+          "ingredients": [
+            {
+              "name": "嫩豆腐",
+              "amount": "1块"
+            },
+            {
+              "name": "猪肉末",
+              "amount": "100g"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "花椒粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "辣椒面",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "姜蒜末",
+              "amount": "各适量"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "水淀粉",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "豆腐切小块焯水",
+            "锅中倒油炒肉末至酥",
+            "加豆瓣酱炒出红油",
+            "加姜蒜末、辣椒面炒香",
+            "加适量水烧开",
+            "放入豆腐轻轻推匀",
+            "加生抽煮3分钟",
+            "水淀粉勾芡",
+            "撒花椒粉和葱花出锅"
+          ]
+        },
+        {
+          "id": "mh14",
+          "name": "葱爆羊肉",
+          "ingredients": [
+            {
+              "name": "羊腿肉",
+              "amount": "300g"
+            },
+            {
+              "name": "大葱",
+              "amount": "3根"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "孜然粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "辣椒粉",
+              "amount": "适量"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "羊肉切薄片，加料酒、生抽、淀粉腌制",
+            "大葱切斜刀段",
+            "锅中倒油烧至冒烟",
+            "下羊肉大火爆炒至变色立即盛出",
+            "锅中留底油，下葱段爆香",
+            "放入羊肉快速翻炒",
+            "加孜然粉、辣椒粉、盐调味",
+            "翻炒均匀立即出锅"
+          ]
+        },
+        {
+          "id": "mh15",
+          "name": "蒜蓉粉丝蒸虾",
+          "ingredients": [
+            {
+              "name": "大虾",
+              "amount": "10只"
+            },
+            {
+              "name": "粉丝",
+              "amount": "1把"
+            },
+            {
+              "name": "蒜",
+              "amount": "1整头"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "粉丝温水泡软",
+            "虾开背去虾线，用刀背拍平",
+            "大蒜剁成蒜蓉",
+            "锅中倒油，小火炒一半蒜蓉至金黄",
+            "与生蒜蓉混合，加生抽、蚝油搅匀",
+            "粉丝铺盘底，摆上虾",
+            "每只虾上铺蒜蓉酱",
+            "蒸锅水开后大火蒸6分钟",
+            "出锅撒葱花，淋热油即可"
+          ]
+        },
+        {
+          "id": "mh16",
+          "name": "啤酒鸭",
+          "ingredients": [
+            {
+              "name": "鸭腿",
+              "amount": "3个"
+            },
+            {
+              "name": "啤酒",
+              "amount": "1罐"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "5个"
+            },
+            {
+              "name": "八角",
+              "amount": "2个"
+            },
+            {
+              "name": "桂皮",
+              "amount": "1小块"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "5瓣"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "老抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "冰糖",
+              "amount": "15g"
+            }
+          ],
+          "steps": [
+            "鸭腿剁块焯水",
+            "锅中倒油，下鸭块煸炒至表面金黄",
+            "加豆瓣酱炒出红油",
+            "加姜片、蒜瓣、干辣椒、八角、桂皮炒香",
+            "倒入啤酒没过鸭肉",
+            "加生抽、老抽、冰糖",
+            "大火烧开转小火炖40分钟",
+            "大火收汁至浓稠即可"
+          ]
+        },
+        {
+          "id": "mh17",
+          "name": "蒜苗炒腊肉",
+          "ingredients": [
+            {
+              "name": "腊肉",
+              "amount": "200g"
+            },
+            {
+              "name": "蒜苗",
+              "amount": "200g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "3个"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "生抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "少许"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "腊肉用温水洗净，蒸20分钟",
+            "腊肉切薄片，蒜苗斜刀切段",
+            "锅中不放油，下腊肉小火煸炒出油",
+            "腊肉变透明时加姜片、干辣椒炒香",
+            "放入蒜苗白部分翻炒",
+            "再放入蒜苗叶部分",
+            "加少许生抽和白糖提鲜",
+            "翻炒至蒜苗断生即可"
+          ]
+        },
+        {
+          "id": "mh18",
+          "name": "家常豆腐",
+          "ingredients": [
+            {
+              "name": "老豆腐",
+              "amount": "1块"
+            },
+            {
+              "name": "猪肉片",
+              "amount": "80g"
+            },
+            {
+              "name": "木耳",
+              "amount": "30g"
+            },
+            {
+              "name": "青椒",
+              "amount": "1个"
+            },
+            {
+              "name": "红椒",
+              "amount": "1个"
+            },
+            {
+              "name": "豆瓣酱",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "蒜片",
+              "amount": "3瓣"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "豆腐切三角厚片",
+            "锅中倒油，下豆腐煎至两面金黄",
+            "下肉片炒至变色",
+            "加豆瓣酱炒出红油",
+            "加入木耳、蒜片翻炒",
+            "加生抽、蚝油和少量水焖2分钟",
+            "放入青红椒翻炒",
+            "收汁出锅"
+          ]
+        },
+        {
+          "id": "mh19",
+          "name": "梅菜扣肉",
+          "ingredients": [
+            {
+              "name": "五花肉",
+              "amount": "500g"
+            },
+            {
+              "name": "梅干菜",
+              "amount": "100g"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "老抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "姜片",
+              "amount": "3片"
+            },
+            {
+              "name": "八角",
+              "amount": "2个"
+            }
+          ],
+          "steps": [
+            "五花肉整块冷水下锅加姜片、料酒煮20分钟",
+            "捞出趁热在猪皮上抹老抽",
+            "锅中倒油，猪皮朝下煎至起泡",
+            "晾凉后切厚片",
+            "梅干菜泡发洗净切碎",
+            "锅中炒香梅干菜，加生抽、白糖调味",
+            "肉片皮朝下码入碗中",
+            "上面铺满梅干菜，放八角",
+            "蒸锅蒸1.5小时",
+            "取出倒扣在盘中即可"
+          ]
+        },
+        {
+          "id": "mh20",
+          "name": "手撕包菜",
+          "ingredients": [
+            {
+              "name": "包菜",
+              "amount": "半颗"
+            },
+            {
+              "name": "五花肉",
+              "amount": "80g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "5个"
+            },
+            {
+              "name": "蒜瓣",
+              "amount": "3瓣"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "包菜手撕成片",
+            "五花肉切薄片",
+            "锅中不放油下五花肉煸出油",
+            "加干辣椒、蒜瓣炒香",
+            "放入包菜大火爆炒",
+            "加蚝油、生抽调味",
+            "沿锅边淋醋",
+            "炒至断生即可"
+          ]
+        },
+        {
+          "id": "mh21",
+          "name": "葱烧海参",
+          "ingredients": [
+            {
+              "name": "水发海参",
+              "amount": "4只"
+            },
+            {
+              "name": "大葱",
+              "amount": "3根"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "高汤",
+              "amount": "200ml"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "海参洗净切条，焯水备用",
+            "大葱切段，锅中倒油炸至金黄捞出",
+            "锅中留葱油，放入海参翻炒",
+            "加料酒、生抽、蚝油、白糖",
+            "加入高汤烧开",
+            "放入炸好的葱段",
+            "中小火煨10分钟入味",
+            "水淀粉勾芡至浓稠",
+            "葱香浓郁的海参即可上桌"
+          ]
+        },
+        {
+          "id": "mh22",
+          "name": "清蒸大闸蟹",
+          "ingredients": [
+            {
+              "name": "大闸蟹",
+              "amount": "4只"
+            },
+            {
+              "name": "姜片",
+              "amount": "适量"
+            },
+            {
+              "name": "紫苏叶",
+              "amount": "适量"
+            },
+            {
+              "name": "姜末",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "香醋",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            }
+          ],
+          "steps": [
+            "大闸蟹用刷子刷洗干净",
+            "蒸锅加水，放入姜片和紫苏叶",
+            "螃蟹肚皮朝上放入蒸笼（防止蟹黄流失）",
+            "每只蟹上放一片姜",
+            "水开后大火蒸15-20分钟",
+            "调蘸料：姜末加香醋和白糖搅匀",
+            "蟹熟后趁热食用",
+            "先吃蟹黄再吃蟹肉"
+          ]
+        },
+        {
+          "id": "mh23",
+          "name": "佛跳墙",
+          "ingredients": [
+            {
+              "name": "鲍鱼",
+              "amount": "4只"
+            },
+            {
+              "name": "海参",
+              "amount": "2只"
+            },
+            {
+              "name": "花胶",
+              "amount": "50g"
+            },
+            {
+              "name": "干贝",
+              "amount": "30g"
+            },
+            {
+              "name": "鸡肉",
+              "amount": "200g"
+            },
+            {
+              "name": "猪蹄",
+              "amount": "1只"
+            },
+            {
+              "name": "金华火腿",
+              "amount": "50g"
+            },
+            {
+              "name": "花菇",
+              "amount": "6朵"
+            },
+            {
+              "name": "鸽子蛋",
+              "amount": "4个"
+            },
+            {
+              "name": "黄酒",
+              "amount": "100ml"
+            },
+            {
+              "name": "姜片",
+              "amount": "5片"
+            },
+            {
+              "name": "高汤",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "各种干货提前2-3天分别泡发",
+            "鸡肉和猪蹄焯水",
+            "金华火腿切片",
+            "在砂锅底部铺姜片",
+            "依次码入鸡块、猪蹄、火腿",
+            "上面放鲍鱼、海参、花胶、干贝、花菇",
+            "倒入黄酒和高汤至没过食材",
+            "盖上盖子用保鲜膜密封",
+            "小火慢炖4-6小时",
+            "最后半小时放入鸽子蛋",
+            "开盖香气四溢即可享用"
+          ]
+        },
+        {
+          "id": "mh24",
+          "name": "北京烤鸭",
+          "ingredients": [
+            {
+              "name": "整鸭",
+              "amount": "1只（约2kg）"
+            },
+            {
+              "name": "麦芽糖水",
+              "amount": "适量（脆皮水）"
+            },
+            {
+              "name": "甜面酱",
+              "amount": "适量"
+            },
+            {
+              "name": "黄瓜条",
+              "amount": "适量"
+            },
+            {
+              "name": "大葱丝",
+              "amount": "适量"
+            },
+            {
+              "name": "荷叶饼",
+              "amount": "适量"
+            },
+            {
+              "name": "姜片",
+              "amount": "适量"
+            },
+            {
+              "name": "料酒",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸭子处理干净，用开水浇淋鸭皮使其收紧",
+            "用麦芽糖水均匀刷在鸭皮上",
+            "挂在通风处晾干12小时以上",
+            "烤箱预热200度",
+            "鸭腹内塞入姜片和料酒",
+            "鸭子放在烤架上，下面放烤盘接油",
+            "200度烤40分钟",
+            "转180度再烤30分钟",
+            "鸭皮呈枣红色取出",
+            "片鸭：先片皮，再片肉",
+            "荷叶饼蒸热，夹鸭肉、黄瓜条、葱丝、甜面酱卷着吃"
+          ]
+        },
+        {
+          "id": "mh25",
+          "name": "松鼠桂鱼",
+          "ingredients": [
+            {
+              "name": "桂鱼",
+              "amount": "1条（约750g）"
+            },
+            {
+              "name": "番茄酱",
+              "amount": "4汤匙"
+            },
+            {
+              "name": "白醋",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "3汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "适量"
+            },
+            {
+              "name": "松仁",
+              "amount": "20g"
+            },
+            {
+              "name": "青豆",
+              "amount": "20g"
+            },
+            {
+              "name": "料酒",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "桂鱼处理干净，去骨但保持鱼身完整",
+            "鱼肉切花刀（先斜刀再直刀，切到鱼皮但不要切断）",
+            "加料酒、盐腌制15分钟",
+            "鱼身均匀裹上淀粉",
+            "油温七成热，将鱼炸至金黄定型呈松鼠状",
+            "捞出摆盘",
+            "锅中倒少许油，下番茄酱炒香",
+            "加白醋、白糖和少许水调成糖醋汁",
+            "加入青豆煮开，水淀粉勾芡",
+            "将糖醋汁浇在鱼身上",
+            "撒松仁即可"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sucai",
+      "name": "素菜",
+      "icon": "🥬",
+      "dishes": [
+        {
+          "id": "sc01",
+          "name": "蒜蓉空心菜",
+          "ingredients": [
+            {
+              "name": "空心菜",
+              "amount": "1把"
+            },
+            {
+              "name": "大蒜",
+              "amount": "5瓣"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "空心菜摘段洗净",
+            "大蒜剁成蒜蓉",
+            "锅中倒油，下一半蒜蓉爆香",
+            "放入空心菜大火快炒",
+            "加盐调味",
+            "出锅前放入另一半蒜蓉",
+            "翻炒几下立即出锅"
+          ]
+        },
+        {
+          "id": "sc02",
+          "name": "蚝油生菜",
+          "ingredients": [
+            {
+              "name": "生菜",
+              "amount": "2颗"
+            },
+            {
+              "name": "蚝油",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "生抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "少许"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "生菜掰开洗净",
+            "锅中烧开水加少许油",
+            "生菜焯水10秒立即捞出摆盘",
+            "锅中倒油，下蒜末爆香",
+            "加蚝油、生抽、白糖和少量水",
+            "水淀粉勾薄芡",
+            "将芡汁浇在生菜上即可"
+          ]
+        },
+        {
+          "id": "sc03",
+          "name": "醋溜白菜",
+          "ingredients": [
+            {
+              "name": "大白菜",
+              "amount": "半颗"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "3个"
+            },
+            {
+              "name": "花椒",
+              "amount": "少许"
+            },
+            {
+              "name": "白醋",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "白菜帮片成薄片，菜叶手撕",
+            "调碗汁：醋、生抽、白糖、淀粉、盐、水搅匀",
+            "锅中倒油，下花椒小火炸香捞出",
+            "放入干辣椒段炒香",
+            "先放白菜帮大火翻炒1分钟",
+            "再放白菜叶翻炒",
+            "倒入碗汁快速翻炒",
+            "汤汁浓稠后立即出锅"
+          ]
+        },
+        {
+          "id": "sc04",
+          "name": "干煸四季豆",
+          "ingredients": [
+            {
+              "name": "四季豆",
+              "amount": "300g"
+            },
+            {
+              "name": "干辣椒",
+              "amount": "5个"
+            },
+            {
+              "name": "花椒",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "芽菜",
+              "amount": "20g"
+            },
+            {
+              "name": "姜蒜末",
+              "amount": "各适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "四季豆去筋折段洗净沥干",
+            "油温六成热下四季豆炸至表皮起皱",
+            "捞出沥油",
+            "锅中留底油，下干辣椒、花椒、芽菜、姜蒜末炒香",
+            "放入四季豆大火翻炒",
+            "加生抽、盐调味",
+            "炒至表面微焦即可"
+          ]
+        },
+        {
+          "id": "sc05",
+          "name": "凉拌黄瓜",
+          "ingredients": [
+            {
+              "name": "黄瓜",
+              "amount": "2根"
+            },
+            {
+              "name": "大蒜",
+              "amount": "3瓣"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "辣椒油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "香油",
+              "amount": "几滴"
+            }
+          ],
+          "steps": [
+            "黄瓜用刀拍裂后切段",
+            "大蒜剁成蒜末",
+            "黄瓜放入碗中加盐腌制10分钟出水",
+            "倒掉多余水分",
+            "加入蒜末、生抽、醋、辣椒油、白糖",
+            "滴入香油",
+            "拌匀即可食用"
+          ]
+        },
+        {
+          "id": "sc06",
+          "name": "地三鲜",
+          "ingredients": [
+            {
+              "name": "土豆",
+              "amount": "1个"
+            },
+            {
+              "name": "茄子",
+              "amount": "1个"
+            },
+            {
+              "name": "青椒",
+              "amount": "2个"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "淀粉",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量（炸用）"
+            }
+          ],
+          "steps": [
+            "土豆、茄子、青椒切滚刀块",
+            "茄子撒盐出水后裹淀粉",
+            "分别将土豆、茄子炸至金黄",
+            "青椒过油10秒",
+            "调碗汁：生抽、蚝油、淀粉、水搅匀",
+            "锅中留底油，下蒜末爆香",
+            "放入所有蔬菜，淋入碗汁",
+            "大火翻炒均匀即可"
+          ]
+        },
+        {
+          "id": "sc07",
+          "name": "清炒豆苗",
+          "ingredients": [
+            {
+              "name": "豆苗",
+              "amount": "300g"
+            },
+            {
+              "name": "蒜片",
+              "amount": "3瓣"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "豆苗洗净沥干",
+            "锅中倒油烧热",
+            "下蒜片爆香",
+            "放入豆苗大火快炒",
+            "加盐调味",
+            "豆苗变软立即出锅",
+            "全程不超过1分钟"
+          ]
+        },
+        {
+          "id": "sc08",
+          "name": "红烧冬瓜",
+          "ingredients": [
+            {
+              "name": "冬瓜",
+              "amount": "500g"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "老抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "冰糖",
+              "amount": "10g"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "冬瓜去皮去瓤切大块",
+            "锅中倒油，下蒜末爆香",
+            "放入冬瓜块翻炒",
+            "加入生抽、老抽、蚝油、冰糖",
+            "加少量水焖煮10分钟",
+            "大火收汁至浓稠",
+            "撒葱花出锅"
+          ]
+        },
+        {
+          "id": "sc09",
+          "name": "麻酱菠菜",
+          "ingredients": [
+            {
+              "name": "菠菜",
+              "amount": "300g"
+            },
+            {
+              "name": "芝麻酱",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "生抽",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "醋",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "蒜末",
+              "amount": "2瓣"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "熟芝麻",
+              "amount": "少许"
+            }
+          ],
+          "steps": [
+            "菠菜洗净焯水30秒",
+            "捞出过凉水挤干水分",
+            "芝麻酱用温水调开",
+            "加入生抽、醋、白糖、蒜末搅匀",
+            "菠菜切段摆盘",
+            "淋上芝麻酱",
+            "撒熟芝麻即可"
+          ]
+        },
+        {
+          "id": "sc10",
+          "name": "香煎豆腐",
+          "ingredients": [
+            {
+              "name": "老豆腐",
+              "amount": "1块"
+            },
+            {
+              "name": "生抽",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "蚝油",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "白糖",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "蒜末",
+              "amount": "3瓣"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "淀粉",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "豆腐切厚片，用厨房纸吸干水分",
+            "豆腐两面均匀沾上淀粉",
+            "锅中倒油，中小火煎豆腐",
+            "每面煎至金黄（约3分钟）",
+            "调碗汁：生抽、蚝油、白糖、水搅匀",
+            "倒入碗汁小火收汁",
+            "撒蒜末和葱花",
+            "翻面让两面都裹上酱汁即可"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gaodian",
+      "name": "糕点",
+      "icon": "🍰",
+      "dishes": [
+        {
+          "id": "gd01",
+          "name": "蛋挞",
+          "ingredients": [
+            {
+              "name": "蛋挞皮",
+              "amount": "12个"
+            },
+            {
+              "name": "鸡蛋黄",
+              "amount": "3个"
+            },
+            {
+              "name": "淡奶油",
+              "amount": "150ml"
+            },
+            {
+              "name": "牛奶",
+              "amount": "100ml"
+            },
+            {
+              "name": "白糖",
+              "amount": "40g"
+            },
+            {
+              "name": "炼乳",
+              "amount": "1汤匙"
+            }
+          ],
+          "steps": [
+            "牛奶加白糖加热至糖融化，晾凉",
+            "加入蛋黄搅匀",
+            "加入淡奶油和炼乳搅匀",
+            "蛋挞液过筛2次使其细腻",
+            "蛋挞皮摆入烤盘",
+            "倒入蛋挞液八九分满",
+            "烤箱预热200度",
+            "中层烤20-25分钟",
+            "表面出现焦斑即可出炉"
+          ]
+        },
+        {
+          "id": "gd02",
+          "name": "蔓越莓饼干",
+          "ingredients": [
+            {
+              "name": "低筋面粉",
+              "amount": "200g"
+            },
+            {
+              "name": "黄油",
+              "amount": "120g"
+            },
+            {
+              "name": "糖粉",
+              "amount": "60g"
+            },
+            {
+              "name": "鸡蛋液",
+              "amount": "30ml"
+            },
+            {
+              "name": "蔓越莓干",
+              "amount": "50g"
+            }
+          ],
+          "steps": [
+            "黄油室温软化，加糖粉打发至发白",
+            "分次加入鸡蛋液搅匀",
+            "筛入低筋面粉翻拌成面团",
+            "加入切碎的蔓越莓干揉匀",
+            "将面团整理成长方体",
+            "保鲜膜包好冷冻1小时定型",
+            "取出切成约5mm厚的片",
+            "烤箱预热170度，烤15-18分钟",
+            "表面微黄即可"
+          ]
+        },
+        {
+          "id": "gd03",
+          "name": "戚风蛋糕",
+          "ingredients": [
+            {
+              "name": "鸡蛋",
+              "amount": "5个"
+            },
+            {
+              "name": "低筋面粉",
+              "amount": "85g"
+            },
+            {
+              "name": "牛奶",
+              "amount": "40ml"
+            },
+            {
+              "name": "玉米油",
+              "amount": "40ml"
+            },
+            {
+              "name": "白糖（蛋白）",
+              "amount": "60g"
+            },
+            {
+              "name": "白糖（蛋黄）",
+              "amount": "20g"
+            },
+            {
+              "name": "柠檬汁",
+              "amount": "几滴"
+            }
+          ],
+          "steps": [
+            "蛋黄蛋清分离（蛋清盆必须无油无水）",
+            "蛋黄加白糖搅匀，加牛奶和玉米油搅匀",
+            "筛入低筋面粉翻拌至无颗粒",
+            "蛋清加柠檬汁，分三次加糖打发至硬性发泡",
+            "取1/3蛋白霜加入蛋黄糊翻拌",
+            "倒回蛋白霜中翻拌均匀",
+            "倒入模具，震出气泡",
+            "烤箱预热150度，下层烤50分钟",
+            "出炉倒扣冷却后脱模"
+          ]
+        },
+        {
+          "id": "gd04",
+          "name": "芒果千层",
+          "ingredients": [
+            {
+              "name": "低筋面粉",
+              "amount": "120g"
+            },
+            {
+              "name": "鸡蛋",
+              "amount": "3个"
+            },
+            {
+              "name": "牛奶",
+              "amount": "350ml"
+            },
+            {
+              "name": "黄油",
+              "amount": "30g"
+            },
+            {
+              "name": "白糖",
+              "amount": "30g"
+            },
+            {
+              "name": "淡奶油",
+              "amount": "300ml"
+            },
+            {
+              "name": "芒果",
+              "amount": "3个"
+            }
+          ],
+          "steps": [
+            "鸡蛋加糖打散，加牛奶搅匀",
+            "筛入低筋面粉搅至无颗粒",
+            "加入融化的黄油搅匀",
+            "面糊过筛，冷藏30分钟",
+            "平底锅小火，倒入一勺面糊摊薄",
+            "表面鼓泡即可揭下晾凉",
+            "重复做10-15张饼皮",
+            "淡奶油加糖打发",
+            "一层饼皮+一层奶油+一层芒果片",
+            "重复叠加，冷藏2小时后切块"
+          ]
+        },
+        {
+          "id": "gd05",
+          "name": "牛奶小方",
+          "ingredients": [
+            {
+              "name": "牛奶",
+              "amount": "250ml"
+            },
+            {
+              "name": "淡奶油",
+              "amount": "100ml"
+            },
+            {
+              "name": "白糖",
+              "amount": "40g"
+            },
+            {
+              "name": "玉米淀粉",
+              "amount": "40g"
+            },
+            {
+              "name": "椰蓉",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "将80ml牛奶与玉米淀粉混合搅匀",
+            "剩余牛奶加淡奶油、白糖倒入锅中",
+            "中小火加热搅拌至糖融化",
+            "倒入淀粉牛奶混合液",
+            "持续搅拌至浓稠糊状",
+            "倒入铺保鲜膜的容器中",
+            "抹平表面，冷藏4小时以上",
+            "取出切小方块",
+            "每块均匀裹上椰蓉即可"
+          ]
+        },
+        {
+          "id": "gd06",
+          "name": "蛋黄酥",
+          "ingredients": [
+            {
+              "name": "中筋面粉（油皮）",
+              "amount": "150g"
+            },
+            {
+              "name": "猪油（油皮）",
+              "amount": "55g"
+            },
+            {
+              "name": "白糖（油皮）",
+              "amount": "25g"
+            },
+            {
+              "name": "水（油皮）",
+              "amount": "60ml"
+            },
+            {
+              "name": "低筋面粉（油酥）",
+              "amount": "120g"
+            },
+            {
+              "name": "猪油（油酥）",
+              "amount": "60g"
+            },
+            {
+              "name": "咸蛋黄",
+              "amount": "12个"
+            },
+            {
+              "name": "红豆沙",
+              "amount": "300g"
+            },
+            {
+              "name": "蛋黄液",
+              "amount": "1个"
+            },
+            {
+              "name": "黑芝麻",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "咸蛋黄喷白酒，烤箱180度烤5分钟",
+            "红豆沙分12份，每份包入一个咸蛋黄",
+            "油皮材料混合揉成光滑面团，醒30分钟",
+            "油酥材料混合揉成团",
+            "油皮和油酥各分12份",
+            "油皮包油酥，擀成牛舌状卷起",
+            "醒15分钟后再次擀卷",
+            "擀成圆皮包入豆沙蛋黄馅",
+            "收口朝下摆入烤盘",
+            "刷蛋黄液撒黑芝麻",
+            "烤箱180度烤30分钟至金黄"
+          ]
+        },
+        {
+          "id": "gd07",
+          "name": "糯米糍",
+          "ingredients": [
+            {
+              "name": "糯米粉",
+              "amount": "150g"
+            },
+            {
+              "name": "玉米淀粉",
+              "amount": "30g"
+            },
+            {
+              "name": "白糖",
+              "amount": "50g"
+            },
+            {
+              "name": "牛奶",
+              "amount": "200ml"
+            },
+            {
+              "name": "黄油",
+              "amount": "20g"
+            },
+            {
+              "name": "芒果/草莓",
+              "amount": "适量"
+            },
+            {
+              "name": "椰蓉",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "糯米粉、玉米淀粉、白糖、牛奶混合搅匀",
+            "过筛后盖保鲜膜扎孔",
+            "蒸锅水开后大火蒸20分钟",
+            "趁热加入黄油揉匀",
+            "晾至不烫手后反复揉拉至光滑",
+            "分成小剂子",
+            "包入水果块收口",
+            "表面滚上椰蓉即可"
+          ]
+        },
+        {
+          "id": "gd08",
+          "name": "桃酥",
+          "ingredients": [
+            {
+              "name": "低筋面粉",
+              "amount": "250g"
+            },
+            {
+              "name": "食用油",
+              "amount": "100ml"
+            },
+            {
+              "name": "白糖",
+              "amount": "80g"
+            },
+            {
+              "name": "鸡蛋",
+              "amount": "1个"
+            },
+            {
+              "name": "泡打粉",
+              "amount": "3g"
+            },
+            {
+              "name": "小苏打",
+              "amount": "2g"
+            },
+            {
+              "name": "核桃碎",
+              "amount": "50g"
+            },
+            {
+              "name": "黑芝麻",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "食用油加白糖搅匀",
+            "加入鸡蛋搅匀",
+            "筛入低筋面粉、泡打粉、小苏打",
+            "加入核桃碎翻拌成面团",
+            "分成小剂子搓圆",
+            "放在烤盘上按扁",
+            "中间用手指按一个小坑",
+            "表面刷蛋液撒黑芝麻",
+            "烤箱预热180度，烤15-18分钟",
+            "表面金黄即可出炉"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jiushui",
+      "name": "酒水",
+      "icon": "🍹",
+      "dishes": [
+        {
+          "id": "js01",
+          "name": "莫吉托",
+          "ingredients": [
+            {
+              "name": "白朗姆酒",
+              "amount": "45ml"
+            },
+            {
+              "name": "青柠",
+              "amount": "半个"
+            },
+            {
+              "name": "薄荷叶",
+              "amount": "10片"
+            },
+            {
+              "name": "白糖",
+              "amount": "2茶匙"
+            },
+            {
+              "name": "苏打水",
+              "amount": "适量"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "青柠切小块放入杯中",
+            "加入薄荷叶和白糖",
+            "用捣棒轻轻按压出汁（不要捣碎薄荷叶）",
+            "加入朗姆酒",
+            "加满冰块",
+            "倒入苏打水至满杯",
+            "轻轻搅拌",
+            "薄荷叶和青柠片装饰"
+          ]
+        },
+        {
+          "id": "js02",
+          "name": "长岛冰茶",
+          "ingredients": [
+            {
+              "name": "伏特加",
+              "amount": "15ml"
+            },
+            {
+              "name": "金酒",
+              "amount": "15ml"
+            },
+            {
+              "name": "白朗姆酒",
+              "amount": "15ml"
+            },
+            {
+              "name": "龙舌兰酒",
+              "amount": "15ml"
+            },
+            {
+              "name": "橙味利口酒",
+              "amount": "15ml"
+            },
+            {
+              "name": "柠檬汁",
+              "amount": "30ml"
+            },
+            {
+              "name": "可乐",
+              "amount": "适量"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            },
+            {
+              "name": "柠檬片",
+              "amount": "1片"
+            }
+          ],
+          "steps": [
+            "高杯中加入冰块",
+            "依次倒入四种基酒和橙味利口酒",
+            "加入柠檬汁",
+            "搅拌均匀",
+            "倒入可乐至满杯（颜色类似冰茶）",
+            "轻轻搅拌",
+            "柠檬片装饰"
+          ]
+        },
+        {
+          "id": "js03",
+          "name": "玛格丽特",
+          "ingredients": [
+            {
+              "name": "龙舌兰酒",
+              "amount": "45ml"
+            },
+            {
+              "name": "橙味利口酒",
+              "amount": "20ml"
+            },
+            {
+              "name": "青柠汁",
+              "amount": "20ml"
+            },
+            {
+              "name": "盐",
+              "amount": "适量（杯口）"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            },
+            {
+              "name": "青柠角",
+              "amount": "装饰用"
+            }
+          ],
+          "steps": [
+            "用青柠角擦拭杯口边缘",
+            "将杯口在盐盘中转动沾上盐边",
+            "雪克壶中加入冰块",
+            "倒入龙舌兰酒、橙味利口酒、青柠汁",
+            "用力摇合15秒",
+            "滤入准备好的杯中",
+            "青柠角装饰杯口"
+          ]
+        },
+        {
+          "id": "js04",
+          "name": "椰林飘香",
+          "ingredients": [
+            {
+              "name": "白朗姆酒",
+              "amount": "45ml"
+            },
+            {
+              "name": "椰奶",
+              "amount": "60ml"
+            },
+            {
+              "name": "菠萝汁",
+              "amount": "90ml"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            },
+            {
+              "name": "菠萝块",
+              "amount": "装饰用"
+            },
+            {
+              "name": "樱桃",
+              "amount": "装饰用"
+            }
+          ],
+          "steps": [
+            "搅拌机中加入冰块",
+            "倒入朗姆酒、椰奶、菠萝汁",
+            "搅拌至冰沙状",
+            "倒入飓风杯",
+            "菠萝块和樱桃装饰",
+            "插上吸管享用"
+          ]
+        },
+        {
+          "id": "js05",
+          "name": "金汤力",
+          "ingredients": [
+            {
+              "name": "金酒",
+              "amount": "45ml"
+            },
+            {
+              "name": "汤力水",
+              "amount": "适量"
+            },
+            {
+              "name": "青柠角",
+              "amount": "2个"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "直筒杯中加入冰块",
+            "倒入金酒",
+            "挤入一个青柠角的汁",
+            "倒入汤力水至满杯",
+            "轻轻搅拌一下",
+            "另一个青柠角装饰"
+          ]
+        },
+        {
+          "id": "js06",
+          "name": "威士忌酸",
+          "ingredients": [
+            {
+              "name": "波本威士忌",
+              "amount": "60ml"
+            },
+            {
+              "name": "柠檬汁",
+              "amount": "30ml"
+            },
+            {
+              "name": "糖浆",
+              "amount": "20ml"
+            },
+            {
+              "name": "蛋清",
+              "amount": "1个（可选）"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            },
+            {
+              "name": "安哥斯图拉苦精",
+              "amount": "几滴"
+            }
+          ],
+          "steps": [
+            "雪克壶中加入威士忌、柠檬汁、糖浆",
+            "加入蛋清（如使用）",
+            "先不加冰干摇10秒乳化蛋清",
+            "加冰后再摇15秒",
+            "滤入加冰的古典杯中",
+            "滴几滴苦精在泡沫上",
+            "柠檬皮装饰"
+          ]
+        },
+        {
+          "id": "js07",
+          "name": "龙舌兰日出",
+          "ingredients": [
+            {
+              "name": "龙舌兰酒",
+              "amount": "45ml"
+            },
+            {
+              "name": "橙汁",
+              "amount": "120ml"
+            },
+            {
+              "name": "红石榴糖浆",
+              "amount": "15ml"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            },
+            {
+              "name": "橙片",
+              "amount": "装饰用"
+            }
+          ],
+          "steps": [
+            "高球杯中加满冰块",
+            "倒入龙舌兰酒",
+            "倒入橙汁至八分满",
+            "沿杯壁缓缓倒入红石榴糖浆",
+            "糖浆会沉底形成日出渐变效果",
+            "不要搅拌",
+            "橙片装饰杯口"
+          ]
+        },
+        {
+          "id": "js08",
+          "name": "蓝色夏威夷",
+          "ingredients": [
+            {
+              "name": "白朗姆酒",
+              "amount": "30ml"
+            },
+            {
+              "name": "蓝橙利口酒",
+              "amount": "30ml"
+            },
+            {
+              "name": "椰奶",
+              "amount": "30ml"
+            },
+            {
+              "name": "菠萝汁",
+              "amount": "60ml"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            },
+            {
+              "name": "菠萝角",
+              "amount": "装饰用"
+            }
+          ],
+          "steps": [
+            "搅拌机中加入冰块",
+            "倒入所有酒类和果汁",
+            "搅拌至冰沙状",
+            "倒入飓风杯",
+            "菠萝角和樱桃装饰",
+            "热带风情十足"
+          ]
+        },
+        {
+          "id": "js09",
+          "name": "草莓奶昔",
+          "ingredients": [
+            {
+              "name": "草莓",
+              "amount": "150g"
+            },
+            {
+              "name": "牛奶",
+              "amount": "200ml"
+            },
+            {
+              "name": "冰淇淋",
+              "amount": "1球"
+            },
+            {
+              "name": "白糖",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "草莓洗净去蒂切半",
+            "搅拌机中放入草莓、牛奶、冰淇淋、白糖",
+            "加入适量冰块",
+            "搅拌至顺滑",
+            "倒入杯中",
+            "草莓切片装饰杯口"
+          ]
+        },
+        {
+          "id": "js10",
+          "name": "芒果冰沙",
+          "ingredients": [
+            {
+              "name": "芒果",
+              "amount": "2个"
+            },
+            {
+              "name": "冰块",
+              "amount": "1杯"
+            },
+            {
+              "name": "白糖",
+              "amount": "1汤匙"
+            },
+            {
+              "name": "柠檬汁",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "水",
+              "amount": "50ml"
+            }
+          ],
+          "steps": [
+            "芒果去皮去核切块",
+            "搅拌机中放入芒果肉、冰块、白糖、柠檬汁",
+            "加少量水帮助搅拌",
+            "搅拌至细腻冰沙状",
+            "倒入杯中",
+            "芒果丁装饰即可"
+          ]
+        },
+        {
+          "id": "js11",
+          "name": "柠檬薄荷水",
+          "ingredients": [
+            {
+              "name": "柠檬",
+              "amount": "1个"
+            },
+            {
+              "name": "薄荷叶",
+              "amount": "适量"
+            },
+            {
+              "name": "蜂蜜",
+              "amount": "2汤匙"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            },
+            {
+              "name": "水",
+              "amount": "500ml"
+            }
+          ],
+          "steps": [
+            "柠檬切片",
+            "杯中放入柠檬片和薄荷叶",
+            "用勺子轻轻按压出味",
+            "加入蜂蜜",
+            "倒入冷水或苏打水",
+            "加入冰块",
+            "搅拌均匀即可"
+          ]
+        },
+        {
+          "id": "js12",
+          "name": "西瓜汁",
+          "ingredients": [
+            {
+              "name": "西瓜",
+              "amount": "500g"
+            },
+            {
+              "name": "冰块",
+              "amount": "适量"
+            },
+            {
+              "name": "柠檬汁",
+              "amount": "少许"
+            },
+            {
+              "name": "蜂蜜",
+              "amount": "可选"
+            }
+          ],
+          "steps": [
+            "西瓜去皮去籽切块",
+            "搅拌机中放入西瓜块",
+            "加入少许柠檬汁提味",
+            "根据甜度可加蜂蜜",
+            "加入冰块搅拌",
+            "过滤后倒入杯中",
+            "西瓜球装饰"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mifan",
+      "name": "米饭",
+      "icon": "🍚",
+      "dishes": [
+        {
+          "id": "mf01",
+          "name": "皮蛋瘦肉粥",
+          "ingredients": [
+            {
+              "name": "大米",
+              "amount": "100g"
+            },
+            {
+              "name": "皮蛋",
+              "amount": "2个"
+            },
+            {
+              "name": "猪瘦肉",
+              "amount": "100g"
+            },
+            {
+              "name": "姜丝",
+              "amount": "适量"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "白胡椒粉",
+              "amount": "少许"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "香油",
+              "amount": "几滴"
+            }
+          ],
+          "steps": [
+            "大米洗净浸泡30分钟",
+            "瘦肉切丝加盐和淀粉腌制",
+            "皮蛋切小块",
+            "锅中加水烧开，放入大米",
+            "大火煮开转小火熬30分钟至米粒开花",
+            "加入姜丝和皮蛋",
+            "放入肉丝划散",
+            "肉丝变色后加盐、白胡椒粉调味",
+            "关火淋香油撒葱花即可"
+          ]
+        },
+        {
+          "id": "mf02",
+          "name": "南瓜小米粥",
+          "ingredients": [
+            {
+              "name": "小米",
+              "amount": "80g"
+            },
+            {
+              "name": "大米",
+              "amount": "20g"
+            },
+            {
+              "name": "南瓜",
+              "amount": "200g"
+            },
+            {
+              "name": "枸杞",
+              "amount": "少许"
+            },
+            {
+              "name": "冰糖",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "小米和大米洗净浸泡20分钟",
+            "南瓜去皮切小块",
+            "锅中加水烧开",
+            "放入米大火煮开",
+            "转小火熬15分钟",
+            "加入南瓜块继续熬15分钟",
+            "熬至粥粘稠南瓜软烂",
+            "加入冰糖和枸杞",
+            "再煮2分钟即可"
+          ]
+        },
+        {
+          "id": "mf03",
+          "name": "八宝粥",
+          "ingredients": [
+            {
+              "name": "糯米",
+              "amount": "50g"
+            },
+            {
+              "name": "大米",
+              "amount": "30g"
+            },
+            {
+              "name": "红豆",
+              "amount": "30g"
+            },
+            {
+              "name": "绿豆",
+              "amount": "20g"
+            },
+            {
+              "name": "花生",
+              "amount": "20g"
+            },
+            {
+              "name": "莲子",
+              "amount": "15g"
+            },
+            {
+              "name": "红枣",
+              "amount": "10颗"
+            },
+            {
+              "name": "桂圆肉",
+              "amount": "15g"
+            },
+            {
+              "name": "冰糖",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "红豆、绿豆、花生、莲子提前泡4小时以上",
+            "糯米和大米洗净",
+            "所有材料放入锅中",
+            "加入足量水（约为材料的8倍）",
+            "大火烧开转小火慢熬1小时",
+            "期间不断搅拌防止粘锅",
+            "熬至豆类软烂粥粘稠",
+            "加入冰糖搅拌至融化即可"
+          ]
+        },
+        {
+          "id": "mf04",
+          "name": "扬州炒饭",
+          "ingredients": [
+            {
+              "name": "隔夜米饭",
+              "amount": "2碗"
+            },
+            {
+              "name": "鸡蛋",
+              "amount": "2个"
+            },
+            {
+              "name": "虾仁",
+              "amount": "50g"
+            },
+            {
+              "name": "火腿",
+              "amount": "50g"
+            },
+            {
+              "name": "青豆",
+              "amount": "30g"
+            },
+            {
+              "name": "玉米粒",
+              "amount": "30g"
+            },
+            {
+              "name": "胡萝卜丁",
+              "amount": "30g"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡蛋打散炒熟盛出",
+            "虾仁、青豆、玉米粒、胡萝卜丁焯水",
+            "火腿切丁",
+            "锅中倒油烧热",
+            "放入米饭大火炒散",
+            "加入所有配料翻炒均匀",
+            "放入炒好的鸡蛋",
+            "加盐调味",
+            "撒葱花翻炒出锅"
+          ]
+        },
+        {
+          "id": "mf05",
+          "name": "蛋炒饭",
+          "ingredients": [
+            {
+              "name": "隔夜米饭",
+              "amount": "1碗"
+            },
+            {
+              "name": "鸡蛋",
+              "amount": "2个"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "鸡蛋打散，一半拌入米饭中",
+            "让每粒米都裹上蛋液",
+            "锅中倒油烧热",
+            "倒入米饭大火翻炒至粒粒分明",
+            "倒入剩余蛋液快速翻炒",
+            "加盐调味",
+            "撒葱花翻炒",
+            "蛋香浓郁即可出锅"
+          ]
+        },
+        {
+          "id": "mf06",
+          "name": "腊味炒饭",
+          "ingredients": [
+            {
+              "name": "隔夜米饭",
+              "amount": "2碗"
+            },
+            {
+              "name": "腊肉",
+              "amount": "50g"
+            },
+            {
+              "name": "腊肠",
+              "amount": "1根"
+            },
+            {
+              "name": "鸡蛋",
+              "amount": "1个"
+            },
+            {
+              "name": "青豆",
+              "amount": "30g"
+            },
+            {
+              "name": "葱花",
+              "amount": "适量"
+            },
+            {
+              "name": "生抽",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "腊肉和腊肠蒸熟切丁",
+            "鸡蛋打散炒熟",
+            "锅中倒少许油，下腊肉腊肠丁炒出油",
+            "放入米饭大火炒散",
+            "加入青豆和鸡蛋翻炒",
+            "加少许生抽调味",
+            "撒葱花翻炒均匀出锅"
+          ]
+        },
+        {
+          "id": "mf07",
+          "name": "菠萝炒饭",
+          "ingredients": [
+            {
+              "name": "隔夜米饭",
+              "amount": "2碗"
+            },
+            {
+              "name": "菠萝",
+              "amount": "半个"
+            },
+            {
+              "name": "虾仁",
+              "amount": "50g"
+            },
+            {
+              "name": "鸡蛋",
+              "amount": "1个"
+            },
+            {
+              "name": "腰果",
+              "amount": "30g"
+            },
+            {
+              "name": "葡萄干",
+              "amount": "15g"
+            },
+            {
+              "name": "咖喱粉",
+              "amount": "1茶匙"
+            },
+            {
+              "name": "盐",
+              "amount": "适量"
+            },
+            {
+              "name": "食用油",
+              "amount": "适量"
+            }
+          ],
+          "steps": [
+            "菠萝对半切开，挖出果肉切丁",
+            "菠萝壳留着当容器",
+            "鸡蛋炒熟，虾仁炒熟",
+            "锅中倒油，放入米饭炒散",
+            "加咖喱粉炒匀使米饭金黄",
+            "加入菠萝丁、虾仁、鸡蛋、腰果、葡萄干",
+            "加盐翻炒均匀",
+            "盛入菠萝壳中即可"
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// ===== STATE =====
+let currentCat = 'chuancai';
+let selectedDishes = {}; // {dishId: {name, cat, catName, owner}}
+let orders = []; // [{time, dishes:[], sessionId}]
+let sessionId = generateId();
+
+// Parse URL for shared session
+const urlParams = new URLSearchParams(window.location.search);
+const sharedSession = urlParams.get('session');
+if (sharedSession) {
+  sessionId = sharedSession;
+  showToast('已加入共享选菜');
+}
+
+// Load from localStorage
+try {
+  const saved = localStorage.getItem('amumu_selected');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    // Only load if same session or no session stored
+    const savedSession = localStorage.getItem('amumu_session');
+    if (!savedSession || savedSession === sessionId) {
+      selectedDishes = parsed;
+    }
+  }
+  localStorage.setItem('amumu_session', sessionId);
+  
+  const savedOrders = localStorage.getItem('amumu_orders');
+  if (savedOrders) { orders = JSON.parse(savedOrders); }
+} catch(e) {}
+
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
+
+function saveState() {
+  try {
+    localStorage.setItem('amumu_selected', JSON.stringify(selectedDishes));
+    localStorage.setItem('amumu_session', sessionId);
+    localStorage.setItem('amumu_orders', JSON.stringify(orders));
+  } catch(e) {}
+}
+
+// Sync across tabs
+const bc = new BroadcastChannel('amumu_cart');
+bc.onmessage = (e) => {
+  if (e.data.type === 'update' && e.data.session === sessionId) {
+    selectedDishes = e.data.dishes;
+    renderAll();
+  }
+};
+
+// ===== RENDER =====
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '<div class="logo">阿沐<br>菜单</div>' + MENU_DATA.categories.map(cat => `
+    <div class="nav-item ${cat.id === currentCat ? 'active' : ''}" onclick="switchCat('${cat.id}')">
+      <span class="icon">${cat.icon}</span>
+      <span class="label">${cat.name}</span>
+    </div>
+  `).join('');
+}
+
+function renderContent() {
+  const cat = MENU_DATA.categories.find(c => c.id === currentCat);
+  if (!cat) return;
+  
+  document.getElementById('pageTitle').textContent = cat.icon + ' ' + cat.name;
+  
+  const content = document.getElementById('dishContent');
+  const catSelected = cat.dishes.filter(d => selectedDishes[d.id]).length;
+  
+  content.innerHTML = `
+    <div class="cat-header">
+      <h2>${cat.icon} ${cat.name} <span class="count">${cat.dishes.length}道 · 已选${catSelected}道</span></h2>
+    </div>
+    <div class="dish-grid">
+      ${cat.dishes.map(d => `
+        <div class="dish-card ${selectedDishes[d.id] ? 'selected' : ''}" onclick="toggleDish('${d.id}','${d.name}','${cat.id}','${cat.name}')">
+          <div class="dish-icon">🍽️</div>
+          <div class="dish-info">
+            <div class="dish-name">${d.name}</div>
+            <div class="dish-hint">${d.ingredients.length}种食材 · ${d.steps.length}步制作</div>
+          </div>
+          <div class="dish-check">✓</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  
+  // Rebind click on dish cards for detail
+  content.querySelectorAll('.dish-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+      // Don't trigger if clicking the check area only (handled by toggleDish)
+      const dishId = this.querySelector('.dish-name').textContent;
+      // Find the dish
+      const dish = cat.dishes.find(d => d.name === dishId);
+      if (dish) {
+        openDetail(dish);
+      }
+    });
+  });
+}
+
+function renderCart() {
+  const body = document.getElementById('cartBody');
+  const myDishes = [];
+  const friendDishes = [];
+  
+  Object.entries(selectedDishes).forEach(([id, info]) => {
+    if (info.owner === sessionId || !info.owner) {
+      myDishes.push({id, ...info});
+    } else {
+      friendDishes.push({id, ...info});
+    }
+  });
+  
+  let html = '';
+  
+  if (myDishes.length === 0 && friendDishes.length === 0) {
+    html = '<div class="cart-empty">🛒 购物车是空的<br><span style="font-size:12px;">去菜单里选菜吧~</span></div>';
+  } else {
+    if (myDishes.length > 0) {
+      html += '<div class="cart-section"><h4>👤 我的选择</h4>';
+      myDishes.forEach(d => {
+        html += `<div class="cart-item">
+          <div><div class="ci-name">${d.name}</div><div class="ci-cat">${d.catName}</div></div>
+          <button class="ci-remove" onclick="removeDish('${d.id}')">✕</button>
+        </div>`;
+      });
+      html += '</div>';
+    }
+    if (friendDishes.length > 0) {
+      html += '<div class="cart-section"><h4>👥 朋友的选择</h4>';
+      friendDishes.forEach(d => {
+        html += `<div class="cart-item">
+          <div><div class="ci-name">${d.name}</div><div class="ci-cat">${d.catName}</div></div>
+          <span style="font-size:11px;color:var(--text2)">已选</span>
+        </div>`;
+      });
+      html += '</div>';
+    }
+  }
+  
+  body.innerHTML = html;
+  
+  // Update badge
+  const total = Object.keys(selectedDishes).length;
+  const badge = document.getElementById('cartBadge');
+  if (total > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = total;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function renderAll() {
+  renderSidebar();
+  renderContent();
+  renderCart();
+}
+
+// ===== ACTIONS =====
+function switchCat(catId) {
+  currentCat = catId;
+  renderAll();
+}
+
+function toggleDish(id, name, catId, catName) {
+  if (selectedDishes[id]) {
+    delete selectedDishes[id];
+  } else {
+    selectedDishes[id] = { name, cat: catId, catName, owner: sessionId };
+  }
+  saveState();
+  // Broadcast to other tabs
+  bc.postMessage({ type: 'update', session: sessionId, dishes: selectedDishes });
+  renderAll();
+}
+
+function removeDish(id) {
+  delete selectedDishes[id];
+  saveState();
+  bc.postMessage({ type: 'update', session: sessionId, dishes: selectedDishes });
+  renderAll();
+}
+
+function openDetail(dish) {
+  document.getElementById('detailTitle').textContent = '🍽️ ' + dish.name;
+  document.getElementById('detailBody').innerHTML = `
+    <div class="modal-section">
+      <h4>🥬 所需食材（${dish.ingredients.length}种）</h4>
+      <ul class="ingredient-list">
+        ${dish.ingredients.map(i => `
+          <li><span class="ing-name">${i.name}</span><span class="ing-amount">${i.amount}</span></li>
+        `).join('')}
+      </ul>
+    </div>
+    <div class="modal-section">
+      <h4>📝 制作教程（${dish.steps.length}步）</h4>
+      <ol class="step-list">
+        ${dish.steps.map(s => `<li>${s}</li>`).join('')}
+      </ol>
+    </div>
+  `;
+  document.getElementById('detailModal').classList.remove('hidden');
+}
+
+function closeDetail() {
+  document.getElementById('detailModal').classList.add('hidden');
+}
+
+function toggleCart() {
+  document.getElementById('cartPanel').classList.toggle('hidden');
+  renderCart();
+}
+
+function placeOrder() {
+  const total = Object.keys(selectedDishes).length;
+  if (total === 0) {
+    showToast('请先选择菜品');
+    return;
+  }
+  
+  const order = {
+    time: new Date().toLocaleString('zh-CN'),
+    dishes: Object.entries(selectedDishes).map(([id, info]) => ({ id, name: info.name, cat: info.catName })),
+    sessionId: sessionId
+  };
+  
+  orders.unshift(order);
+  if (orders.length > 50) orders = orders.slice(0, 50); // Keep last 50
+  
+  // Clear cart
+  selectedDishes = {};
+  saveState();
+  bc.postMessage({ type: 'update', session: sessionId, dishes: {} });
+  
+  renderAll();
+  toggleCart();
+  showToast('✅ 下单成功！');
+}
+
+function openHistory() {
+  document.getElementById('historyPage').classList.remove('hidden');
+  const body = document.getElementById('historyBody');
+  
+  if (orders.length === 0) {
+    body.innerHTML = '<div class="cart-empty">📜 暂无历史订单<br><span style="font-size:12px;">选好菜下单后这里会显示记录~</span></div>';
+  } else {
+    body.innerHTML = orders.map((order, idx) => `
+      <div class="order-card">
+        <div class="order-time">📅 ${order.time}</div>
+        <div class="order-dishes">
+          ${order.dishes.map(d => `<span class="order-dish">${d.name}</span>`).join(' ')}
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;">共 ${order.dishes.length} 道菜</div>
+      </div>
+    `).join('');
+  }
+}
+
+function closeHistory() {
+  document.getElementById('historyPage').classList.add('hidden');
+}
+
+function openShare() {
+  const url = new URL(window.location.href);
+  url.searchParams.set('session', sessionId);
+  document.getElementById('shareUrl').textContent = url.toString();
+  document.getElementById('shareStatus').textContent = '';
+  document.getElementById('shareModal').classList.remove('hidden');
+}
+
+function closeShare() {
+  document.getElementById('shareModal').classList.add('hidden');
+}
+
+function copyShareLink() {
+  const url = document.getElementById('shareUrl').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById('shareStatus').textContent = '✅ 链接已复制！发送给朋友吧~';
+    });
+  } else {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    document.getElementById('shareStatus').textContent = '✅ 链接已复制！发送给朋友吧~';
+  }
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.remove(); }, 2000);
+}
+
+// Close modals on overlay click
+document.getElementById('detailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeDetail();
+});
+document.getElementById('cartPanel').addEventListener('click', function(e) {
+  if (e.target === this) toggleCart();
+});
+document.getElementById('shareModal').addEventListener('click', function(e) {
+  if (e.target === this) closeShare();
+});
+
+// ===== PWA Service Worker =====
+if ('serviceWorker' in navigator) {
+  const swCode = `
+const CACHE = 'amumu-v1';
+const URLS = ['/amumu/'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS)));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      if (res.ok) {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+      }
+      return res;
+    }))
+  );
+});
+`;
+  
+  const blob = new Blob([swCode], {type: 'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl, {scope: '/amumu/'}).catch(() => {});
+}
+
+// ===== INIT =====
+renderAll();
+
+// Poll localStorage for shared changes (in case BroadcastChannel not available)
+setInterval(() => {
+  try {
+    const saved = localStorage.getItem('amumu_selected');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const savedSession = localStorage.getItem('amumu_session');
+      if (savedSession === sessionId) {
+        // Check if different from current
+        const currentKeys = Object.keys(selectedDishes).sort().join(',');
+        const savedKeys = Object.keys(parsed).sort().join(',');
+        if (currentKeys !== savedKeys) {
+          selectedDishes = parsed;
+          renderAll();
+        }
+      }
+    }
+  } catch(e) {}
+}, 2000);
+</script>
+</body>
+</html>
