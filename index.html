@@ -6350,81 +6350,101 @@ let isHost = true; // 创建分享链接的人是host
 // Parse URL for shared session
 const urlParams = new URLSearchParams(window.location.search);
 const sharedSession = urlParams.get('session');
+const sharedBlobUrl = urlParams.get('blob');
 if (sharedSession) {
   sessionId = sharedSession;
   isHost = false;
+  if (sharedBlobUrl) {
+    blobUrl = sharedBlobUrl;
+    localStorage.setItem(CLOUD_URL_KEY, blobUrl);
+  }
   showToast('已加入共享选菜');
 }
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
 
-// ===== CLOUD SYNC via simple key-value store =====
-// Use a simple approach: store shared data encoded in the URL fragment
-// When friend opens the shared link, data syncs via localStorage polling + URL
-const CLOUD_KEY = 'amumu_cloud_' + sessionId;
+// ===== CLOUD SYNC via jsonblob.com API =====
+// jsonblob.com provides free JSON storage with REST API
+// Each shared session gets a unique blob URL stored in localStorage
+const CLOUD_URL_KEY = 'amumu_blob_url_' + sessionId;
+let blobUrl = localStorage.getItem(CLOUD_URL_KEY) || null;
 let syncTimer = null;
+let lastCloudTime = 0;
 
-// Encode current state to a compact string
-function encodeState() {
+async function cloudSave() {
   const data = {
-    s: selectedDishes,
-    o: orders.slice(0, 20),
-    t: Date.now()
+    selectedDishes: selectedDishes,
+    orders: orders.slice(0, 20),
+    sessionId: sessionId,
+    lastUpdate: Date.now()
   };
   try {
-    return btoa(encodeURIComponent(JSON.stringify(data)));
-  } catch(e) { return ''; }
-}
-
-// Decode state from string
-function decodeState(str) {
-  try {
-    return JSON.parse(decodeURIComponent(atob(str)));
-  } catch(e) { return null; }
-}
-
-// Store state in localStorage with cloud key
-function cloudSave() {
-  try {
-    const encoded = encodeState();
-    if (encoded) {
-      localStorage.setItem(CLOUD_KEY, encoded);
-      // Also update URL fragment silently
-      if (isHost && window.history.replaceState) {
-        const url = new URL(window.location);
-        url.hash = 's=' + encoded.substring(0, 500);
-        window.history.replaceState({}, '', url);
+    if (blobUrl) {
+      // Update existing blob
+      await fetch(blobUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } else {
+      // Create new blob
+      const resp = await fetch('https://jsonblob.com/api/jsonBlob', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (resp.ok) {
+        // Get the blob URL from Location header
+        const location = resp.headers.get('Location');
+        if (location) {
+          blobUrl = location;
+          localStorage.setItem(CLOUD_URL_KEY, blobUrl);
+        }
       }
     }
-  } catch(e) {}
+    lastCloudTime = Date.now();
+  } catch(e) { console.log('Cloud save error:', e); }
 }
 
-// Load state from localStorage cloud key
-function cloudLoad() {
+async function cloudLoad() {
+  if (!blobUrl) return false;
   try {
-    const saved = localStorage.getItem(CLOUD_KEY);
-    if (saved) {
-      const data = decodeState(saved);
-      if (data && data.sessionId === sessionId) {
+    const resp = await fetch(blobUrl, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.sessionId === sessionId && data.lastUpdate > lastCloudTime) {
         // Merge selected dishes
         const merged = { ...selectedDishes };
-        Object.entries(data.s || {}).forEach(([id, info]) => {
-          if (!merged[id]) merged[id] = info;
-        });
+        if (data.selectedDishes) {
+          Object.entries(data.selectedDishes).forEach(([id, info]) => {
+            if (!merged[id]) merged[id] = info;
+          });
+        }
         selectedDishes = merged;
         
         // Merge orders
-        if (data.o && data.o.length > 0) {
+        if (data.orders && data.orders.length > 0) {
           const existingKeys = new Set(orders.map(o => o.time));
-          data.o.forEach(o => {
+          let hasNew = false;
+          data.orders.forEach(o => {
             if (!existingKeys.has(o.time)) {
               orders.unshift(o);
               existingKeys.add(o.time);
+              hasNew = true;
             }
           });
           orders = orders.slice(0, 50);
+          if (hasNew) {
+            showToast('📋 对方有新订单！');
+          }
         }
         
+        lastCloudTime = data.lastUpdate;
         saveState();
         renderAll();
         return true;
@@ -6434,32 +6454,24 @@ function cloudLoad() {
   return false;
 }
 
-// Try to load from URL hash (shared by host via messaging)
-function loadFromHash() {
-  try {
-    const hash = window.location.hash;
-    if (hash.startsWith('#s=')) {
-      const encoded = hash.substring(3);
-      const data = decodeState(encoded);
-      if (data && data.s) {
-        Object.entries(data.s).forEach(([id, info]) => {
-          if (!selectedDishes[id]) selectedDishes[id] = info;
-        });
-        saveState();
-        renderAll();
-      }
-    }
-  } catch(e) {}
-}
-
 function startSync() {
-  loadFromHash();
-  // Poll every 2 seconds to check for cloud updates
-  syncTimer = setInterval(() => {
-    if (cloudLoad()) {
-      // Data was updated from cloud
+  // First try to get existing blob URL from shared link
+  const sharedBlob = urlParams.get('blob');
+  if (sharedBlob && !blobUrl) {
+    blobUrl = sharedBlob;
+    localStorage.setItem(CLOUD_URL_KEY, blobUrl);
+  }
+  
+  // Do initial load from cloud
+  cloudLoad().then(() => {
+    // If no blob yet, create one
+    if (!blobUrl) {
+      cloudSave();
     }
-  }, 2000);
+  });
+  
+  // Poll every 2 seconds
+  syncTimer = setInterval(cloudLoad, 2000);
 }
 
 // Load from localStorage
@@ -6725,6 +6737,10 @@ function closeHistory() {
 function openShare() {
   const url = new URL(window.location.href);
   url.searchParams.set('session', sessionId);
+  // Also pass blob URL so friend can sync
+  if (blobUrl) {
+    url.searchParams.set('blob', blobUrl);
+  }
   document.getElementById('shareUrl').textContent = url.toString();
   document.getElementById('shareStatus').textContent = '';
   document.getElementById('shareModal').classList.remove('hidden');
