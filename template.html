@@ -419,10 +419,10 @@ async function cloudSave() {
         body: JSON.stringify(data)
       });
       if (resp.ok) {
-        // Get the blob URL from Location header
+        // Get the blob URL from Location header - ensure full URL
         const location = resp.headers.get('Location');
         if (location) {
-          blobUrl = location;
+          blobUrl = location.startsWith('http') ? location : 'https://jsonblob.com' + location;
           localStorage.setItem(CLOUD_URL_KEY, blobUrl);
         }
       }
