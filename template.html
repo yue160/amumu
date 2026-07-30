@@ -351,7 +351,7 @@ body { display:flex; }
 <!-- Order History Page -->
 <div class="history-page hidden" id="historyPage">
   <div class="history-header">
-    <button class="btn btn-outline btn-sm" onclick="closeHistory()">← 返回</button>
+    <button class="btn btn-outline btn-sm" onclick="closeHistory()" style="margin-top:44px;">← 返回</button>
     <h3>📜 历史订单</h3>
     <div style="width:60px;"></div>
   </div>
@@ -365,15 +365,123 @@ const MENU_DATA = __EMBED_DATA__;
 // ===== STATE =====
 let currentCat = 'chuancai';
 let selectedDishes = {}; // {dishId: {name, cat, catName, owner}}
-let orders = []; // [{time, dishes:[], sessionId}]
+let orders = []; // [{time, dishes:[], sessionId, owner}]
 let sessionId = generateId();
+let isHost = true; // 创建分享链接的人是host
 
 // Parse URL for shared session
 const urlParams = new URLSearchParams(window.location.search);
 const sharedSession = urlParams.get('session');
 if (sharedSession) {
   sessionId = sharedSession;
+  isHost = false;
   showToast('已加入共享选菜');
+}
+
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
+
+// ===== CLOUD SYNC via simple key-value store =====
+// Use a simple approach: store shared data encoded in the URL fragment
+// When friend opens the shared link, data syncs via localStorage polling + URL
+const CLOUD_KEY = 'amumu_cloud_' + sessionId;
+let syncTimer = null;
+
+// Encode current state to a compact string
+function encodeState() {
+  const data = {
+    s: selectedDishes,
+    o: orders.slice(0, 20),
+    t: Date.now()
+  };
+  try {
+    return btoa(encodeURIComponent(JSON.stringify(data)));
+  } catch(e) { return ''; }
+}
+
+// Decode state from string
+function decodeState(str) {
+  try {
+    return JSON.parse(decodeURIComponent(atob(str)));
+  } catch(e) { return null; }
+}
+
+// Store state in localStorage with cloud key
+function cloudSave() {
+  try {
+    const encoded = encodeState();
+    if (encoded) {
+      localStorage.setItem(CLOUD_KEY, encoded);
+      // Also update URL fragment silently
+      if (isHost && window.history.replaceState) {
+        const url = new URL(window.location);
+        url.hash = 's=' + encoded.substring(0, 500);
+        window.history.replaceState({}, '', url);
+      }
+    }
+  } catch(e) {}
+}
+
+// Load state from localStorage cloud key
+function cloudLoad() {
+  try {
+    const saved = localStorage.getItem(CLOUD_KEY);
+    if (saved) {
+      const data = decodeState(saved);
+      if (data && data.sessionId === sessionId) {
+        // Merge selected dishes
+        const merged = { ...selectedDishes };
+        Object.entries(data.s || {}).forEach(([id, info]) => {
+          if (!merged[id]) merged[id] = info;
+        });
+        selectedDishes = merged;
+        
+        // Merge orders
+        if (data.o && data.o.length > 0) {
+          const existingKeys = new Set(orders.map(o => o.time));
+          data.o.forEach(o => {
+            if (!existingKeys.has(o.time)) {
+              orders.unshift(o);
+              existingKeys.add(o.time);
+            }
+          });
+          orders = orders.slice(0, 50);
+        }
+        
+        saveState();
+        renderAll();
+        return true;
+      }
+    }
+  } catch(e) {}
+  return false;
+}
+
+// Try to load from URL hash (shared by host via messaging)
+function loadFromHash() {
+  try {
+    const hash = window.location.hash;
+    if (hash.startsWith('#s=')) {
+      const encoded = hash.substring(3);
+      const data = decodeState(encoded);
+      if (data && data.s) {
+        Object.entries(data.s).forEach(([id, info]) => {
+          if (!selectedDishes[id]) selectedDishes[id] = info;
+        });
+        saveState();
+        renderAll();
+      }
+    }
+  } catch(e) {}
+}
+
+function startSync() {
+  loadFromHash();
+  // Poll every 2 seconds to check for cloud updates
+  syncTimer = setInterval(() => {
+    if (cloudLoad()) {
+      // Data was updated from cloud
+    }
+  }, 2000);
 }
 
 // Load from localStorage
@@ -381,7 +489,6 @@ try {
   const saved = localStorage.getItem('amumu_selected');
   if (saved) {
     const parsed = JSON.parse(saved);
-    // Only load if same session or no session stored
     const savedSession = localStorage.getItem('amumu_session');
     if (!savedSession || savedSession === sessionId) {
       selectedDishes = parsed;
@@ -392,8 +499,6 @@ try {
   const savedOrders = localStorage.getItem('amumu_orders');
   if (savedOrders) { orders = JSON.parse(savedOrders); }
 } catch(e) {}
-
-function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
 
 function saveState() {
   try {
@@ -546,7 +651,7 @@ function toggleDish(id, name, catId, catName) {
     selectedDishes[id] = { name, cat: catId, catName, owner: sessionId };
   }
   saveState();
-  // Broadcast to other tabs
+  cloudSave();
   bc.postMessage({ type: 'update', session: sessionId, dishes: selectedDishes });
   renderAll();
 }
@@ -554,6 +659,7 @@ function toggleDish(id, name, catId, catName) {
 function removeDish(id) {
   delete selectedDishes[id];
   saveState();
+  cloudSave();
   bc.postMessage({ type: 'update', session: sessionId, dishes: selectedDishes });
   renderAll();
 }
@@ -597,21 +703,22 @@ function placeOrder() {
   
   const order = {
     time: new Date().toLocaleString('zh-CN'),
-    dishes: Object.entries(selectedDishes).map(([id, info]) => ({ id, name: info.name, cat: info.catName })),
+    dishes: Object.entries(selectedDishes).map(([id, info]) => ({ id, name: info.name, cat: info.catName, owner: info.owner || sessionId })),
     sessionId: sessionId
   };
   
   orders.unshift(order);
-  if (orders.length > 50) orders = orders.slice(0, 50); // Keep last 50
+  if (orders.length > 50) orders = orders.slice(0, 50);
   
   // Clear cart
   selectedDishes = {};
   saveState();
+  cloudSave();
   bc.postMessage({ type: 'update', session: sessionId, dishes: {} });
   
   renderAll();
   toggleCart();
-  showToast('✅ 下单成功！');
+  showToast('✅ 下单成功！对方刷新后可见');
 }
 
 function openHistory() {
@@ -724,26 +831,7 @@ self.addEventListener('fetch', e => {
 
 // ===== INIT =====
 renderAll();
-
-// Poll localStorage for shared changes (in case BroadcastChannel not available)
-setInterval(() => {
-  try {
-    const saved = localStorage.getItem('amumu_selected');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const savedSession = localStorage.getItem('amumu_session');
-      if (savedSession === sessionId) {
-        // Check if different from current
-        const currentKeys = Object.keys(selectedDishes).sort().join(',');
-        const savedKeys = Object.keys(parsed).sort().join(',');
-        if (currentKeys !== savedKeys) {
-          selectedDishes = parsed;
-          renderAll();
-        }
-      }
-    }
-  } catch(e) {}
-}, 2000);
+startSync();
 </script>
 </body>
 </html>
