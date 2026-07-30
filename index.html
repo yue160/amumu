@@ -6347,29 +6347,35 @@ let orders = []; // [{time, dishes:[], sessionId, owner}]
 let sessionId = generateId();
 let isHost = true; // 创建分享链接的人是host
 
-// Parse URL for shared session
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
+
+// Parse URL for shared session (before CLOUD_URL_KEY depends on sessionId)
 const urlParams = new URLSearchParams(window.location.search);
 const sharedSession = urlParams.get('session');
 const sharedBlobUrl = urlParams.get('blob');
+
+// Re-generate sessionId if joining shared session
 if (sharedSession) {
   sessionId = sharedSession;
   isHost = false;
-  if (sharedBlobUrl) {
-    blobUrl = sharedBlobUrl;
-    localStorage.setItem(CLOUD_URL_KEY, blobUrl);
-  }
-  showToast('已加入共享选菜');
 }
-
-function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2,6); }
 
 // ===== CLOUD SYNC via jsonblob.com API =====
 // jsonblob.com provides free JSON storage with REST API
 // Each shared session gets a unique blob URL stored in localStorage
 const CLOUD_URL_KEY = 'amumu_blob_url_' + sessionId;
-let blobUrl = localStorage.getItem(CLOUD_URL_KEY) || null;
+// Initialize blobUrl: URL param > localStorage > null
+let blobUrl = sharedBlobUrl || localStorage.getItem(CLOUD_URL_KEY) || null;
+if (sharedBlobUrl && !localStorage.getItem(CLOUD_URL_KEY)) {
+  localStorage.setItem(CLOUD_URL_KEY, sharedBlobUrl);
+}
 let syncTimer = null;
 let lastCloudTime = 0;
+
+if (sharedSession && blobUrl) {
+  // We joined via shared link, show notification
+  setTimeout(() => showToast('已加入共享选菜'), 500);
+}
 
 async function cloudSave() {
   const data = {
@@ -6418,19 +6424,25 @@ async function cloudLoad() {
   if (!blobUrl) return false;
   try {
     const resp = await fetch(blobUrl, {
-      headers: { 'Accept': 'application/json' }
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-cache'
     });
     if (resp.ok) {
       const data = await resp.json();
       if (data.sessionId === sessionId && data.lastUpdate > lastCloudTime) {
+        let updated = false;
+        
         // Merge selected dishes
-        const merged = { ...selectedDishes };
         if (data.selectedDishes) {
+          const merged = { ...selectedDishes };
           Object.entries(data.selectedDishes).forEach(([id, info]) => {
-            if (!merged[id]) merged[id] = info;
+            if (!merged[id]) {
+              merged[id] = info;
+              updated = true;
+            }
           });
+          if (updated) selectedDishes = merged;
         }
-        selectedDishes = merged;
         
         // Merge orders
         if (data.orders && data.orders.length > 0) {
@@ -6446,40 +6458,37 @@ async function cloudLoad() {
           orders = orders.slice(0, 50);
           if (hasNew) {
             showToast('📋 对方有新订单！');
+            updated = true;
           }
         }
         
         lastCloudTime = data.lastUpdate;
-        saveState();
-        renderAll();
-        return true;
+        if (updated) {
+          saveState();
+          renderAll();
+        }
+        return updated;
       }
     }
-  } catch(e) {}
+  } catch(e) { console.log('Cloud load error:', e.message); }
   return false;
 }
 
 function startSync() {
-  // First try to get existing blob URL from shared link
-  const sharedBlob = urlParams.get('blob');
-  if (sharedBlob && !blobUrl) {
-    blobUrl = sharedBlob;
-    localStorage.setItem(CLOUD_URL_KEY, blobUrl);
+  // Initial cloud sync: if we have a blobUrl (from share link), load first; otherwise create
+  if (blobUrl) {
+    cloudLoad().then(hasUpdate => {
+      if (hasUpdate) {
+        showToast('📋 已同步最新数据');
+      }
+    });
+  } else if (isHost) {
+    // Only host creates new blob
+    cloudSave();
   }
   
-  // Do initial load from cloud
-  cloudLoad().then(() => {
-    // If no blob yet, create one
-    if (!blobUrl) {
-      cloudSave();
-    }
-  });
-  
-  // Poll every 2 seconds
-  syncTimer = setInterval(cloudLoad, 2000);
-  
-  // Also immediately try again after 1s (in case blob was just created)
-  setTimeout(cloudLoad, 1000);
+  // Poll every 3 seconds for cloud updates
+  syncTimer = setInterval(cloudLoad, 3000);
 }
 
 // Load from localStorage
